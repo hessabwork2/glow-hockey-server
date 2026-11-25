@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Glow Hockey Pro v3.0 — سيرفر سحابي + P2P</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    input {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000000;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      color: #ffffff;
+      touch-action: none;
+    }
+
+    .app {
+      width: 100%;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    }
+
+    .stage {
+      position: relative;
+      height: 100%;
+      max-width: 100%;
+      aspect-ratio: 450 / 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    @media (max-aspect-ratio: 450/800) {
+      .stage {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+      }
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #000000;
+      touch-action: none;
+      will-change: transform;
+    }
+
+    .net-pill {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(2, 10, 22, 0.86);
+      border: 1px solid rgba(56, 189, 248, 0.55);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #bae6fd;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .net-leave-btn {
+      background: rgba(239, 68, 68, 0.28);
+      border: 1px solid rgba(248, 113, 113, 0.65);
+      color: #fecaca;
+      border-radius: 999px;
+      padding: 1px 7px;
+      font-size: 10.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.86);
+      padding: 14px;
+      z-index: 15;
+      overflow-y: auto;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 372px;
+      max-height: 100%;
+      overflow-y: auto;
+      background: linear-gradient(180deg, rgba(12, 16, 28, 0.98), rgba(4, 6, 12, 0.99));
+      border: 1.5px solid rgba(56, 189, 248, 0.55);
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.2);
+      border-radius: 22px;
+      padding: 18px 15px;
+      text-align: center;
+    }
+
+    .logo-title {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+      background: linear-gradient(90deg, #4ade80, #38bdf8, #facc15, #f87171);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .ver-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      border-radius: 999px;
+      padding: 2px 10px;
+      margin-bottom: 10px;
+    }
+
+    .sub {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      line-height: 1.45;
+    }
+
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 11px;
+    }
+
+    .neon-btn {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 13px;
+      border: 1.5px solid #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      color: #ffffff;
+      font-size: 14.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.08s;
+    }
+    .neon-btn:active { transform: scale(0.97); }
+    .neon-btn.green { border-color: #22c55e; background: rgba(34, 197, 94, 0.14); }
+    .neon-btn.red { border-color: #ef4444; background: rgba(239, 68, 68, 0.14); }
+    .neon-btn.yellow { border-color: #eab308; background: rgba(234, 179, 8, 0.14); }
+    .neon-btn.purple { border-color: #c084fc; background: rgba(192, 132, 252, 0.14); }
+    .neon-btn.ghost {
+      border-color: rgba(148, 163, 184, 0.4);
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      padding: 9px;
+      color: #cbd5e1;
+    }
+    .neon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .seg-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .seg-grid.col3 { grid-template-columns: repeat(3, 1fr); }
+    .seg-grid.col2 { grid-template-columns: repeat(2, 1fr); }
+
+    .seg {
+      padding: 8px 4px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(148, 163, 184, 0.32);
+      background: rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .seg.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.22);
+      color: #ffffff;
+    }
+
+    .lbl {
+      display: block;
+      text-align: right;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #93c5fd;
+      margin: 6px 0 5px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(56, 189, 248, 0.24);
+      border-radius: 14px;
+      padding: 11px;
+      margin-bottom: 10px;
+      text-align: right;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .theme-chip {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1.5px solid rgba(148, 163, 184, 0.35);
+      border-radius: 11px;
+      padding: 6px 2px;
+      color: #e2e8f0;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .theme-chip.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .theme-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 2px solid #fff;
+    }
+
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    .shape-chip {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1.5px solid rgba(148, 163, 184, 0.32);
+      border-radius: 10px;
+      padding: 7px 2px;
+      color: #e2e8f0;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .shape-chip .s-ic { font-size: 16px; }
+    .shape-chip.active {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.18);
+      color: #fef08a;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 12px;
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .toggle-row .t-txt { text-align: right; }
+    .toggle-row .t-title { font-size: 12px; font-weight: 800; color: #f8fafc; }
+    .toggle-row .t-sub { font-size: 10px; color: #94a3b8; }
+    .switch-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(100, 116, 139, 0.25);
+      color: #cbd5e1;
+      white-space: nowrap;
+    }
+    .switch-pill.on {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.22);
+      color: #fde047;
+    }
+    .switch-pill.turbo {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.22);
+      color: #86efac;
+    }
+
+    .code-in {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1.5px solid #38bdf8;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-align: center;
+      padding: 7px;
+      direction: ltr;
+      outline: none;
+    }
+
+    .code-show {
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1.5px dashed #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      color: #7dd3fc;
+      font-size: 21px;
+      font-weight: 900;
+      text-align: center;
+      direction: ltr;
+    }
+
+    .status-msg {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7dd3fc;
+      min-height: 18px;
+      margin: 6px 0 8px;
+      text-align: center;
+    }
+    .status-msg.err { color: #fca5a5; }
+    .status-msg.ok { color: #86efac; }
+
+    .win-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .win-box {
+      border-radius: 14px;
+      padding: 9px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+    }
+    .win-box .w-lbl { font-size: 11px; color: #cbd5e1; }
+    .win-box .w-num { font-size: 28px; font-weight: 900; margin-top: 2px; }
+
+    .match-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .m-stat {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-radius: 11px;
+      padding: 7px 4px;
+    }
+    .m-stat .ms-lbl { font-size: 9.5px; color: #94a3b8; }
+    .m-stat .ms-val { font-size: 14px; font-weight: 900; color: #7dd3fc; margin-top: 2px; }
+
+    .mini-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini-toggle {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+  <!-- PeerJS للعب بين جوالين بدون كود أو بكود من رقمين -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js" defer onerror="window.__loadPeerFallback && window.__loadPeerFallback()"></script>
+  <script>
+    window.__loadPeerFallback = function() {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+      s.defer = true;
+      document.head.appendChild(s);
+    };
+  </script>
+</head>
+<body>
+  <div class="app">
+    <div class="stage">
+      <canvas id="gameCanvas"></canvas>
+
+      <div id="netPill" class="net-pill hidden">
+        <span>📡 <span id="netRoleText">اللاعب 1</span> • <span id="pingVal">--</span>ms • <span id="fpsVal">60</span>fps</span>
+        <button id="netLeaveBtn" class="net-leave-btn">خروج</button>
+      </div>
+
+      <!-- 1. القائمة الرئيسية -->
+      <div id="mainOverlay" class="overlay">
+        <div class="card">
+          <div class="logo-title">GLOW HOCKEY PRO</div>
+          <div class="ver-badge">v3.0 • سيرفر سحابي مستقل (بدون ضغط على جوالك) ☁️</div>
+
+          <div class="mode-list">
+            <button class="neon-btn green" id="btnSolo">🤖 لاعب واحد (ضد الذكاء الاصطناعي)</button>
+            <button class="neon-btn red" id="btnLocal2p">📱 لاعبان في نفس الجوال</button>
+            <button class="neon-btn yellow" id="btnCloud">☁️ سيرفر سحابي مستقل (بدون لاق المضيف)</button>
+            <button class="neon-btn" id="btnOnline">📡 جوالان مباشر P2P (بدون سيرفر)</button>
+            <button class="neon-btn purple" id="btnCustomize">🎨 الثيمات وأشكال اللاعبين</button>
+          </div>
+
+          <div class="toggle-row" id="powerupToggleRow">
+            <div class="t-txt">
+              <div class="t-title">⚡ القوى الخاصة داخل الملعب</div>
+              <div class="t-sub">درع مرمى 🧱 • عملاق 🛡️ • ضربة نارية 🔥 • تجميد ❄️</div>
+            </div>
+            <span id="powerupPill" class="switch-pill">مغلق</span>
+          </div>
+
+          <div class="toggle-row" id="perfToggleRow">
+            <div class="t-txt">
+              <div class="t-title">🚀 وضع الأداء (منع اللاق)</div>
+              <div class="t-sub">يعطيك 60 إطار ثابت على جوال المضيف والضعيف</div>
+            </div>
+            <span id="perfPill" class="switch-pill turbo">سريع ⚡</span>
+          </div>
+
+          <span class="lbl">🏆 عدد الأهداف للفوز:</span>
+          <div class="seg-grid col3" id="winTargetRow">
+            <button class="seg" data-win="5">5 أهداف</button>
+            <button class="seg active" data-win="7">7 أهداف</button>
+            <button class="seg" data-win="10">10 أهداف</button>
+          </div>
+
+          <div class="mini-row">
+            <button id="soundToggleBtn" class="mini-toggle">🔊 الصوت: يعمل</button>
+            <button id="vibToggleBtn" class="mini-toggle">📳 الاهتزاز: يعمل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. شاشة الثيمات وأشكال اللاعبين -->
+      <div id="customOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" style="font-size:22px;">🎨 الثيمات وأشكال اللاعب</div>
+          <p class="sub">تتحدث الخلفية أمامك مباشرة لمعاينة الشكل المختار!</p>
+
+          <span class="lbl">🌈 ثيم الملعب:</span>
+          <div id="themeGrid" class="theme-grid"></div>
+
+          <span class="lbl">⬇️ شكل مضرب اللاعب 1 (أسفل):</span>
+          <div id="botShapeGrid" class="shape-grid"></div>
+
+          <span class="lbl">⬆️ شكل مضرب اللاعب 2 / الخصم (أعلى):</span>
+          <div id="topShapeGrid" class="shape-grid"></div>
+
+          <span class="lbl">⚪ شكل القرص:</span>
+          <div id="puckShapeRow" class="seg-grid col3">
+            <button class="seg active" data-puck="classic">كلاسيك ⚪</button>
+            <button class="seg" data-puck="plasma">بلازما ⚛️</button>
+            <button class="seg" data-puck="star">نجمي ✨</button>
+          </div>
+
+          <button class="neon-btn green back-main" style="margin-top:6px;">حفظ ورجوع ✓</button>
+        </div>
+      </div>
+
+      <!-- 3. اختيار الصعوبة للاعب الواحد -->
+      <div id="soloOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" style="font-size:23px;">🤖 ضد الذكاء الاصطناعي</div>
+          <p class="sub">اختر مستوى قوة الخصم</p>
+          <div class="seg-grid" id="diffRow">
+            <button class="seg" data-diff="easy">سهل</button>
+            <button class="seg active" data-diff="medium">متوسط</button>
+            <button class="seg" data-diff="hard">صعب</button>
+            <button class="seg" data-diff="insane">ناري 🔥</button>
+          </div>
+          <div class="mode-list">
+            <button class="neon-btn green" id="startSoloBtn">ابدأ المباراة ▶</button>
+            <button class="neon-btn ghost back-main">↩ رجوع</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. غرفة اللعب بين جوالين -->
+      <div id="onlineOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" style="font-size:22px;">📡 جوالان (سيرفر محلي/نت)</div>
+          <p class="sub">اتصال خفيف جداً ومضاد لتراكم الحزم لمنع اللاق على جوال السيرفر.</p>
+
+          <div class="seg-grid col2">
+            <button class="seg active" id="tabHost">1. أنا السيرفر</button>
+            <button class="seg" id="tabJoin">2. انضمام لسيرفر</button>
+          </div>
+
+          <div id="hostPanel" class="panel">
+            <button class="neon-btn green" id="hostAutoBtn">⚡ تشغيل السيرفر فوراً (بدون كود)</button>
+            <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(56,189,248,0.28);">
+              <span class="lbl">أو بكود من رقمين فقط (مثلاً 25):</span>
+              <div style="display:grid; grid-template-columns:90px 1fr; gap:6px; align-items:center;">
+                <input id="hostCodeInput" class="code-in" type="tel" maxlength="2" placeholder="25" />
+                <button class="neon-btn yellow" style="padding:10px 6px; font-size:13px;" id="host2DigitBtn">🔢 تشغيل برقمين</button>
+              </div>
+            </div>
+            <div id="roomCodeShow" class="code-show hidden">بدون كود ⚡</div>
+          </div>
+
+          <div id="joinPanel" class="panel hidden">
+            <button class="neon-btn" id="joinAutoBtn">🚀 انضمام فوري (بدون كود)</button>
+            <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(56,189,248,0.28);">
+              <span class="lbl">أو أدخل الكود المكون من رقمين:</span>
+              <div style="display:grid; grid-template-columns:90px 1fr; gap:6px; align-items:center;">
+                <input id="joinCodeInput" class="code-in" type="tel" maxlength="2" placeholder="25" />
+                <button class="neon-btn yellow" style="padding:10px 6px; font-size:13px;" id="join2DigitBtn">دخول بالرقمين ▶</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="netStatus" class="status-msg"></div>
+          <button class="neon-btn ghost back-main">↩ رجوع</button>
+        </div>
+      </div>
+
+      <!-- 4.5. غرفة السيرفر السحابي المستقل (Node.js WebSocket) -->
+      <div id="cloudOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" style="font-size:22px;">☁️ سيرفر سحابي مستقل</div>
+          <p class="sub">السيرفر يحسب الفيزياء والأهداف — جوالك وجوال صديقك يرسلان حركة الإصبع فقط بدون أي ضغط!</p>
+
+          <div class="panel">
+            <span class="lbl">🔗 رابط السيرفر (يُحفظ تلقائياً في جوالك):</span>
+            <input id="cloudUrlInput" class="code-in" style="font-size:13px; letter-spacing:0; padding:9px 8px; margin-bottom:7px;" type="url" placeholder="https://your-server.onrender.com" />
+            <button class="neon-btn ghost" style="padding:7px; font-size:12px; border-color:rgba(56,189,248,0.5); color:#bae6fd;" id="cloudPingBtn">🔄 فحص وإيقاظ السيرفر</button>
+          </div>
+
+          <div class="panel">
+            <button class="neon-btn green" id="cloudAutoBtn">⚡ دخول فوري (بدون كود)</button>
+            <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(56,189,248,0.28);">
+              <span class="lbl">أو غرفة خاصة بكود من رقمين فقط (مثلاً 25):</span>
+              <div style="display:grid; grid-template-columns:90px 1fr; gap:6px; align-items:center;">
+                <input id="cloudCodeInput" class="code-in" type="tel" maxlength="2" placeholder="25" />
+                <button class="neon-btn yellow" style="padding:10px 6px; font-size:13px;" id="cloud2DigitBtn">🔢 دخول بالرقمين</button>
+              </div>
+            </div>
+            <div id="cloudRoomShow" class="code-show hidden">بانتظار اللاعب الثاني...</div>
+          </div>
+
+          <div id="cloudStatus" class="status-msg"></div>
+          <button class="neon-btn ghost back-main">↩ رجوع</button>
+        </div>
+      </div>
+
+      <!-- 5. الإيقاف المؤقت -->
+      <div id="pauseOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" style="font-size:24px;">⏸️ إيقاف مؤقت</div>
+          <p class="sub">المباراة متوقفة مؤقتاً</p>
+          <div class="mode-list">
+            <button class="neon-btn green" id="resumeBtn">استمرار اللعب ▶</button>
+            <button class="neon-btn yellow" id="restartMidBtn">إعادة المباراة 🔄</button>
+            <button class="neon-btn ghost" id="quitBtn">القائمة الرئيسية</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. شاشة الفوز وإحصائيات المباراة -->
+      <div id="winOverlay" class="overlay hidden">
+        <div class="card">
+          <div class="logo-title" id="winTitle">🏆 فاز اللاعب 1!</div>
+          <p class="sub" id="winSub">مباراة نارية رائعة!</p>
+          <div class="win-scores">
+            <div class="win-box" id="winBoxBot">
+              <div class="w-lbl">اللاعب 1 (أسفل)</div>
+              <div class="w-num" id="winScoreBottom">0</div>
+            </div>
+            <div class="win-box" id="winBoxTop">
+              <div class="w-lbl">اللاعب 2 (أعلى)</div>
+              <div class="w-num" id="winScoreTop">0</div>
+            </div>
+          </div>
+
+          <div class="match-stats">
+            <div class="m-stat">
+              <div class="ms-lbl">⚡ أسرع تسديدة</div>
+              <div class="ms-val" id="statMaxSpeed">0 km/h</div>
+            </div>
+            <div class="m-stat">
+              <div class="ms-lbl">🔥 أطول تبادل</div>
+              <div class="ms-val" id="statBestRally">0</div>
+            </div>
+            <div class="m-stat">
+              <div class="ms-lbl">💥 إجمالي الضربات</div>
+              <div class="ms-val" id="statTotalHits">0</div>
+            </div>
+          </div>
+
+          <div class="mode-list">
+            <button class="neon-btn green" id="playAgainBtn">مباراة جديدة 🔄</button>
+            <button class="neon-btn ghost" id="winMenuBtn">القائمة الرئيسية</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+
+      const W = 450;
+      const H = 800;
+      const PAD = 14;
+      const WALL_THICK = 7;
+      const GOAL_W = 166;
+      const GOAL_L = (W - GOAL_W) / 2;
+      const GOAL_R = (W + GOAL_W) / 2;
+      const BASE_MALLET_R = 38;
+      const PUCK_R = 18;
+      const PAUSE_X = W - PAD - 48;
+      const PAUSE_Y = H / 2;
+      const PAUSE_R = 23;
+
+      // ===== 5 ثيمات نيونية =====
+      const THEMES = [
+        {
+          id: 'classic', name: 'كلاسيك', preview: 'linear-gradient(135deg,#22ff44,#ff2222,#2277ff,#ffee22)',
+          bg: '#000000', pattern: 'none', line: 'rgba(130, 130, 130, 0.45)',
+          tl: '#22ff44', tr: '#ff2222', bl: '#2277ff', br: '#ffee22',
+          topMallet: '#15e628', botMallet: '#f21d1d', puckGlow: '#ffcb2b', uiGlow: '#0ea5e9', uiFill: '#e0f2fe'
+        },
+        {
+          id: 'ice', name: 'جليد', preview: 'linear-gradient(135deg,#00f2fe,#4facfe,#c084fc)',
+          bg: '#020b18', pattern: 'grid', line: 'rgba(56, 189, 248, 0.35)',
+          tl: '#00f5ff', tr: '#a855f7', bl: '#3b82f6', br: '#38bdf8',
+          topMallet: '#c084fc', botMallet: '#00e5ff', puckGlow: '#7dd3fc', uiGlow: '#38bdf8', uiFill: '#f0f9ff'
+        },
+        {
+          id: 'lava', name: 'بركان', preview: 'linear-gradient(135deg,#ff512f,#f09819,#ff0844)',
+          bg: '#110302', pattern: 'embers', line: 'rgba(251, 146, 60, 0.32)',
+          tl: '#fb923c', tr: '#ef4444', bl: '#facc15', br: '#f97316',
+          topMallet: '#facc15', botMallet: '#ff2e2e', puckGlow: '#ff7b00', uiGlow: '#f97316', uiFill: '#ffedd5'
+        },
+        {
+          id: 'matrix', name: 'ماتريكس', preview: 'linear-gradient(135deg,#00ff87,#00b09b,#052e16)',
+          bg: '#010d05', pattern: 'hex', line: 'rgba(34, 197, 94, 0.3)',
+          tl: '#22ff66', tr: '#00e5a0', bl: '#10b981', br: '#84cc16',
+          topMallet: '#2dd4bf', botMallet: '#22ff44', puckGlow: '#a3e635', uiGlow: '#22c55e', uiFill: '#dcfce7'
+        },
+        {
+          id: 'royal', name: 'ملكي', preview: 'linear-gradient(135deg,#f59e0b,#ec4899,#8b5cf6)',
+          bg: '#0a0314', pattern: 'diamonds', line: 'rgba(216, 180, 254, 0.28)',
+          tl: '#f59e0b', tr: '#ec4899', bl: '#a855f7', br: '#facc15',
+          topMallet: '#ec4899', botMallet: '#fbbf24', puckGlow: '#fde047', uiGlow: '#c084fc', uiFill: '#faf5ff'
+        }
+      ];
+
+      const MALLET_SHAPES = [
+        { id: 'ring',   name: 'كلاسيك', icon: '⭕' },
+        { id: 'turbo',  name: 'توربو',  icon: '🌀' },
+        { id: 'star',   name: 'نجمة',   icon: '⭐' },
+        { id: 'hex',    name: 'سداسي',  icon: '⬡' },
+        { id: 'target', name: 'ليزر',   icon: '🎯' }
+      ];
+
+      let currentThemeId = localStorage.getItem('gh2_theme') || 'classic';
+      let botShapeId = localStorage.getItem('gh2_botShape') || 'ring';
+      let topShapeId = localStorage.getItem('gh2_topShape') || 'ring';
+      let puckStyleId = localStorage.getItem('gh2_puck') || 'classic';
+      let powerUpsEnabled = localStorage.getItem('gh2_pu') === '1';
+      // وضع الأداء: 'fast' (افتراضي، 60fps ثابت على كل الجوالات) | 'ultra' (خفيف جداً للأجهزة الضعيفة)
+      let perfMode = localStorage.getItem('gh2_perf') || 'fast';
+
+      function getTheme() {
+        return THEMES.find(t => t.id === currentThemeId) || THEMES[0];
+      }
+
+      // ===== نظام التخزين المسبق (Offscreen Caching) لإلغاء اللاق نهائياً =====
+      let currentDpr = 1;
+      const courtCache = document.createElement('canvas');
+      const courtCtx = courtCache.getContext('2d');
+      let cachedThemeKey = '';
+
+      // كاش للهالات المضيئة بدون shadowBlur أثناء اللعب!
+      const glowSpriteCache = new Map();
+      function getGlowSprite(color, radius) {
+        const rKey = Math.round(radius / 4) * 4;
+        const key = color + '_' + rKey;
+        if (glowSpriteCache.has(key)) return glowSpriteCache.get(key);
+        const size = rKey * 2;
+        const c = document.createElement('canvas');
+        c.width = size; c.height = size;
+        const gctx = c.getContext('2d');
+        const grad = gctx.createRadialGradient(rKey, rKey, rKey * 0.15, rKey, rKey, rKey);
+        grad.addColorStop(0, color);
+        grad.addColorStop(0.45, color + '88');
+        grad.addColorStop(1, color + '00');
+        gctx.fillStyle = grad;
+        gctx.fillRect(0, 0, size, size);
+        glowSpriteCache.set(key, c);
+        return c;
+      }
+
+      function applyCanvasResolution() {
+        const rawDpr = window.devicePixelRatio || 1;
+        currentDpr = perfMode === 'ultra' ? 1 : Math.min(rawDpr, 1.4);
+        canvas.width = Math.round(W * currentDpr);
+        canvas.height = Math.round(H * currentDpr);
+        ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+        cachedThemeKey = ''; // إعادة بناء كاش الملعب بالدقة الجديدة
+        rebuildCourtCache();
+      }
+
+      function drawFastNeonLine(targetCtx, x1, y1, x2, y2, color, extraGlow = 0) {
+        targetCtx.save();
+        targetCtx.lineCap = 'round';
+        // بديل shadowBlur: 3 طبقات سريعة جداً على GPU تعطي نفس توهج النيون بدون أي لاق!
+        targetCtx.globalAlpha = 0.22 + extraGlow * 0.22;
+        targetCtx.strokeStyle = color;
+        targetCtx.lineWidth = WALL_THICK + 18 + extraGlow * 10;
+        targetCtx.beginPath(); targetCtx.moveTo(x1, y1); targetCtx.lineTo(x2, y2); targetCtx.stroke();
+
+        targetCtx.globalAlpha = 0.55 + extraGlow * 0.25;
+        targetCtx.lineWidth = WALL_THICK + 7 + extraGlow * 4;
+        targetCtx.beginPath(); targetCtx.moveTo(x1, y1); targetCtx.lineTo(x2, y2); targetCtx.stroke();
+
+        targetCtx.globalAlpha = 1;
+        targetCtx.strokeStyle = '#ffffff';
+        targetCtx.lineWidth = 3.4;
+        targetCtx.beginPath(); targetCtx.moveTo(x1, y1); targetCtx.lineTo(x2, y2); targetCtx.stroke();
+        targetCtx.restore();
+      }
+
+      function rebuildCourtCache() {
+        const theme = getTheme();
+        const key = theme.id + '_' + currentDpr;
+        if (cachedThemeKey === key) return;
+        cachedThemeKey = key;
+
+        courtCache.width = Math.round(W * currentDpr);
+        courtCache.height = Math.round(H * currentDpr);
+        courtCtx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+
+        // الخلفية
+        courtCtx.fillStyle = theme.bg;
+        courtCtx.fillRect(0, 0, W, H);
+
+        // نمط الثيم (يُرسم مرة واحدة فقط في الكاش!)
+        if (theme.pattern !== 'none') {
+          courtCtx.save();
+          courtCtx.strokeStyle = theme.line;
+          courtCtx.globalAlpha = 0.24;
+          courtCtx.lineWidth = 1;
+          if (theme.pattern === 'grid') {
+            for (let x = PAD + 36; x < W - PAD; x += 42) {
+              courtCtx.beginPath(); courtCtx.moveTo(x, PAD); courtCtx.lineTo(x, H - PAD); courtCtx.stroke();
+            }
+            for (let y = PAD + 36; y < H - PAD; y += 42) {
+              courtCtx.beginPath(); courtCtx.moveTo(PAD, y); courtCtx.lineTo(W - PAD, y); courtCtx.stroke();
+            }
+          } else if (theme.pattern === 'hex' || theme.pattern === 'diamonds') {
+            const step = 48;
+            for (let y = PAD + 24; y < H - PAD; y += step) {
+              for (let x = PAD + 24; x < W - PAD; x += step) {
+                courtCtx.beginPath();
+                courtCtx.moveTo(x, y - 14); courtCtx.lineTo(x + 14, y);
+                courtCtx.lineTo(x, y + 14); courtCtx.lineTo(x - 14, y);
+                courtCtx.closePath(); courtCtx.stroke();
+              }
+            }
+          } else if (theme.pattern === 'embers') {
+            const grad = courtCtx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, 420);
+            grad.addColorStop(0, 'rgba(255, 87, 34, 0.22)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            courtCtx.globalAlpha = 1;
+            courtCtx.fillStyle = grad;
+            courtCtx.fillRect(0, 0, W, H);
+          }
+          courtCtx.restore();
+        }
+
+        // خطوط الملعب
+        courtCtx.save();
+        courtCtx.strokeStyle = theme.line;
+        courtCtx.lineWidth = 3.2;
+        courtCtx.beginPath(); courtCtx.moveTo(PAD + 8, H / 2); courtCtx.lineTo(W - PAD - 8, H / 2); courtCtx.stroke();
+        courtCtx.beginPath(); courtCtx.arc(W / 2, H / 2, 76, 0, Math.PI * 2); courtCtx.stroke();
+        courtCtx.beginPath(); courtCtx.arc(W / 2, PAD, GOAL_W / 2 - 4, 0, Math.PI); courtCtx.stroke();
+        courtCtx.beginPath(); courtCtx.arc(W / 2, H - PAD, GOAL_W / 2 - 4, Math.PI, Math.PI * 2); courtCtx.stroke();
+        courtCtx.restore();
+
+        // الجدران الأربعة المتوهجة (مخبوزة في الكاش مرة واحدة فقط!)
+        const l = PAD, r = W - PAD, t = PAD, b = H - PAD, midY = H / 2, cg = 10;
+        drawFastNeonLine(courtCtx, l + cg, t, GOAL_L - 8, t, theme.tl, 0);
+        drawFastNeonLine(courtCtx, l, t + cg, l, midY - 6, theme.tl, 0);
+
+        drawFastNeonLine(courtCtx, GOAL_R + 8, t, r - cg, t, theme.tr, 0);
+        drawFastNeonLine(courtCtx, r, t + cg, r, midY - 6, theme.tr, 0);
+
+        drawFastNeonLine(courtCtx, l, midY + 6, l, b - cg, theme.bl, 0);
+        drawFastNeonLine(courtCtx, l + cg, b, GOAL_L - 8, b, theme.bl, 0);
+
+        drawFastNeonLine(courtCtx, r, midY + 6, r, b - cg, theme.br, 0);
+        drawFastNeonLine(courtCtx, GOAL_R + 8, b, r - cg, b, theme.br, 0);
+
+        // زر الإيقاف الدائري المخبوز في الكاش
+        courtCtx.save();
+        courtCtx.translate(PAUSE_X, PAUSE_Y);
+        courtCtx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        courtCtx.beginPath(); courtCtx.arc(0, 0, PAUSE_R, 0, Math.PI * 2); courtCtx.fill();
+
+        courtCtx.strokeStyle = theme.uiGlow;
+        courtCtx.globalAlpha = 0.32;
+        courtCtx.lineWidth = 10;
+        courtCtx.stroke();
+
+        courtCtx.globalAlpha = 1;
+        courtCtx.strokeStyle = theme.uiFill;
+        courtCtx.lineWidth = 3.2;
+        courtCtx.beginPath(); courtCtx.arc(0, 0, PAUSE_R, 0, Math.PI * 2); courtCtx.stroke();
+
+        courtCtx.fillStyle = theme.uiFill;
+        courtCtx.fillRect(-6.5, -8.5, 4.5, 17);
+        courtCtx.fillRect(2, -8.5, 4.5, 17);
+        courtCtx.restore();
+      }
+
+      // عناصر الواجهة
+      const overlays = {
+        main: document.getElementById('mainOverlay'),
+        custom: document.getElementById('customOverlay'),
+        solo: document.getElementById('soloOverlay'),
+        online: document.getElementById('onlineOverlay'),
+        cloud: document.getElementById('cloudOverlay'),
+        pause: document.getElementById('pauseOverlay'),
+        win: document.getElementById('winOverlay')
+      };
+      const netPill = document.getElementById('netPill');
+      const netRoleText = document.getElementById('netRoleText');
+      const pingValEl = document.getElementById('pingVal');
+      const fpsValEl = document.getElementById('fpsVal');
+      const soundToggleBtn = document.getElementById('soundToggleBtn');
+      const vibToggleBtn = document.getElementById('vibToggleBtn');
+      const powerupPill = document.getElementById('powerupPill');
+      const perfPill = document.getElementById('perfPill');
+      const restartMidBtn = document.getElementById('restartMidBtn');
+      const playAgainBtn = document.getElementById('playAgainBtn');
+
+      function showOverlay(name) {
+        Object.keys(overlays).forEach(k => overlays[k].classList.toggle('hidden', k !== name));
+      }
+
+      function renderCustomizeUI() {
+        const themeGrid = document.getElementById('themeGrid');
+        themeGrid.innerHTML = THEMES.map(t => `
+          <button class="theme-chip ${currentThemeId === t.id ? 'active' : ''}" data-theme="${t.id}">
+            <div class="theme-dot" style="background:${t.preview}"></div>
+            <span>${t.name}</span>
+          </button>
+        `).join('');
+        themeGrid.querySelectorAll('.theme-chip').forEach(b => {
+          b.addEventListener('click', () => {
+            currentThemeId = b.dataset.theme;
+            localStorage.setItem('gh2_theme', currentThemeId);
+            rebuildCourtCache();
+            ensureAudio(); SFX.wall(1.0);
+            renderCustomizeUI();
+          });
+        });
+
+        const fillShapes = (elId, activeVal, setter) => {
+          const el = document.getElementById(elId);
+          el.innerHTML = MALLET_SHAPES.map(s => `
+            <button class="shape-chip ${activeVal === s.id ? 'active' : ''}" data-shape="${s.id}">
+              <span class="s-ic">${s.icon}</span>
+              <span>${s.name}</span>
+            </button>
+          `).join('');
+          el.querySelectorAll('.shape-chip').forEach(b => {
+            b.addEventListener('click', () => {
+              setter(b.dataset.shape);
+              ensureAudio(); SFX.hit(0.9);
+              renderCustomizeUI();
+            });
+          });
+        };
+
+        fillShapes('botShapeGrid', botShapeId, (v) => { botShapeId = v; localStorage.setItem('gh2_botShape', v); });
+        fillShapes('topShapeGrid', topShapeId, (v) => { topShapeId = v; localStorage.setItem('gh2_topShape', v); });
+
+        document.querySelectorAll('#puckShapeRow .seg').forEach(b => {
+          b.classList.toggle('active', b.dataset.puck === puckStyleId);
+        });
+      }
+
+      function syncPowerupUI() {
+        powerupPill.textContent = powerUpsEnabled ? 'مفعّل ⚡' : 'مغلق';
+        powerupPill.classList.toggle('on', powerUpsEnabled);
+      }
+
+      function syncPerfUI() {
+        perfPill.textContent = perfMode === 'ultra' ? 'خفيف جداً 🚀' : 'سريع ⚡';
+      }
+
+      // ===== متغيرات اللعبة =====
+      let gameMode = 'solo';
+      let state = 'menu';
+      let aiDiff = 'medium';
+      let targetScore = 7;
+      let soundOn = true;
+      let vibOn = true;
+      let timeAcc = 0;
+
+      // الشبكة (محرك UDP فائق السرعة بدون Head-of-Line Blocking)
+      let isHost = true;
+      let netPeer = null;
+      let netConn = null;
+      let connectTimeout = null;
+      let syncAcc = 0;
+      let pingAcc = 0;
+      let outSeq = 0;
+      let lastInSeq = 0;
+      let lastSentInX = -999;
+      let lastSentInY = -999;
+      let guestRemoteTarget = { x: W / 2, y: 145, active: false };
+      let guestSnap = null;
+      // السيرفر السحابي المستقل (WebSocket)
+      let cloudWS = null;
+      let cloudSlot = 1; // 1 = أسفل، 2 = أعلى (تُقلب الشاشة له تلقائياً)
+      let cloudSnap = null;
+      let cloudTimeout = null;
+
+      function isNetMode() { return gameMode === 'online' || gameMode === 'cloud'; }
+      function isFlippedView() { return (gameMode === 'online' && !isHost) || (gameMode === 'cloud' && cloudSlot === 2); }
+      let relMsgId = 0;
+      const pendingRelMsgs = new Map(); // رسائل حرجة تُعاد تلقائياً حتى يصل تأكيد ACK
+      const handledRelIds = new Set();
+      let lastHitFxTime = 0;
+      let lastWallFxTime = 0;
+
+      // عدّاد FPS حي
+      let fpsFrames = 0;
+      let fpsTimer = 0;
+
+      // إحصائيات وحالة المباراة
+      let scoreTop = 0;
+      let scoreBot = 0;
+      let maxShotKmh = 0;
+      let currentRally = 0;
+      let bestRally = 0;
+      let totalHits = 0;
+      let stuckTimer = 0;
+
+      let goalPauseTimer = 0;
+      let goalBanner = { text: '', color: '#fff', timer: 0 };
+      let callout = { text: '', color: '#fff', timer: 0, y: H / 2 };
+      let goalFlash = { color: '#fff', alpha: 0 };
+      let shakeTime = 0;
+      let wallFlashes = { tl: 0, tr: 0, bl: 0, br: 0 };
+      let pendingNetEvents = [];
+
+      const PU_TYPES = [
+        { type: 'giant',  icon: '🛡️', color: '#22c55e', label: 'مضرب عملاق! 🛡️' },
+        { type: 'shield', icon: '🧱', color: '#38bdf8', label: 'درع المرمى! 🧱' },
+        { type: 'fire',   icon: '🔥', color: '#f97316', label: 'ضربة نارية! 🔥' },
+        { type: 'freeze', icon: '❄️', color: '#67e8f9', label: 'تجميد الخصم! ❄️' }
+      ];
+      let activeOrb = null;
+      let orbSpawnTimer = 6.0;
+
+      const topMallet = {
+        x: W / 2, y: 145, vx: 0, vy: 0, r: BASE_MALLET_R,
+        targetX: W / 2, targetY: 145, pointerId: null,
+        giantTimer: 0, freezeTimer: 0, shieldTimer: 0
+      };
+      const botMallet = {
+        x: W / 2, y: H - 145, vx: 0, vy: 0, r: BASE_MALLET_R,
+        targetX: W / 2, targetY: H - 145, pointerId: null,
+        giantTimer: 0, freezeTimer: 0, shieldTimer: 0
+      };
+      const puck = {
+        x: W / 2, y: H / 2, vx: 0, vy: 0, r: PUCK_R,
+        lastHitter: null, fireTimer: 0, trail: []
+      };
+
+      let particles = [];
+      let shockwaves = [];
+
+      // ===== محرك الصوت =====
+      let audioCtx = null;
+      function ensureAudio() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      }
+
+      function vibrate(p) {
+        if (!vibOn) return;
+        try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {}
+      }
+
+      function playTone(f1, f2, dur, type = 'sine', vol = 0.16) {
+        if (!soundOn || !audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f1, now);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(40, f2), now + dur);
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + dur);
+      }
+
+      const SFX = {
+        hit(power = 1) {
+          const p = Math.min(1.6, Math.max(0.6, power));
+          playTone(255 * p, 108, 0.08, 'triangle', Math.min(0.24, 0.12 * p));
+          playTone(540 * p, 240, 0.05, 'sine', Math.min(0.14, 0.08 * p));
+        },
+        superHit() {
+          playTone(180, 740, 0.12, 'sawtooth', 0.16);
+          playTone(520, 140, 0.14, 'triangle', 0.2);
+        },
+        wall(power = 1) {
+          const p = Math.min(1.5, Math.max(0.6, power));
+          playTone(430 * p, 210, 0.07, 'sine', Math.min(0.18, 0.1 * p));
+        },
+        powerup() {
+          playTone(520, 980, 0.12, 'triangle', 0.15);
+          setTimeout(() => playTone(780, 1380, 0.16, 'sine', 0.14), 70);
+        },
+        goal() {
+          playTone(330, 660, 0.14, 'triangle', 0.18);
+          setTimeout(() => playTone(440, 880, 0.16, 'triangle', 0.18), 90);
+          setTimeout(() => playTone(554, 1108, 0.28, 'sine', 0.18), 180);
+        },
+        win() {
+          [523, 659, 784, 1046].forEach((f, i) => {
+            setTimeout(() => playTone(f, f * 1.03, 0.2, 'triangle', 0.18), i * 100);
+          });
+        }
+      };
+
+      // سقف للجزيئات لمنع أي ضغط على الذاكرة
+      function spawnSparks(x, y, color, count = 12, speedScale = 1) {
+        const maxP = perfMode === 'ultra' ? 22 : 42;
+        const n = perfMode === 'ultra' ? Math.max(4, Math.floor(count * 0.5)) : count;
+        for (let i = 0; i < n; i++) {
+          if (particles.length >= maxP) particles.shift();
+          const a = Math.random() * Math.PI * 2;
+          const sp = (80 + Math.random() * 250) * speedScale;
+          particles.push({
+            x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+            life: 0.24 + Math.random() * 0.26, maxLife: 0.5,
+            size: 2.2 + Math.random() * 3.0, color
+          });
+        }
+      }
+
+      function spawnShockwave(x, y, color, maxR = 75) {
+        if (shockwaves.length > 5) shockwaves.shift();
+        shockwaves.push({ x, y, r: 10, maxR, color, alpha: 0.9 });
+      }
+
+      function showCallout(text, color, y = H / 2 - 110) {
+        callout = { text, color, timer: 1.25, y };
+      }
+
+      function emitNetEvent(ev) {
+        if (gameMode === 'online' && isHost) pendingNetEvents.push(ev);
+      }
+
+      function resetPositions(serveTo = 'center') {
+        topMallet.x = topMallet.targetX = W / 2;
+        topMallet.y = topMallet.targetY = 145;
+        topMallet.vx = topMallet.vy = 0;
+
+        botMallet.x = botMallet.targetX = W / 2;
+        botMallet.y = botMallet.targetY = H - 145;
+        botMallet.vx = botMallet.vy = 0;
+
+        puck.x = W / 2;
+        puck.y = serveTo === 'top' ? H / 2 - 78 : (serveTo === 'bottom' ? H / 2 + 78 : H / 2);
+        puck.vx = 0;
+        puck.vy = 0;
+        puck.fireTimer = 0;
+        puck.trail = [];
+        currentRally = 0;
+        stuckTimer = 0;
+      }
+
+      function clearPowerups() {
+        activeOrb = null;
+        orbSpawnTimer = 5.5;
+        topMallet.giantTimer = topMallet.freezeTimer = topMallet.shieldTimer = 0;
+        botMallet.giantTimer = botMallet.freezeTimer = botMallet.shieldTimer = 0;
+        topMallet.r = botMallet.r = BASE_MALLET_R;
+        puck.fireTimer = 0;
+      }
+
+      function startGame(mode) {
+        ensureAudio();
+        gameMode = mode;
+        scoreTop = 0; scoreBot = 0;
+        maxShotKmh = 0; currentRally = 0; bestRally = 0; totalHits = 0;
+        particles = []; shockwaves = [];
+        goalPauseTimer = 0; goalBanner.timer = 0; callout.timer = 0;
+        goalFlash.alpha = 0; shakeTime = 0;
+        wallFlashes = { tl: 0, tr: 0, bl: 0, br: 0 };
+        topMallet.pointerId = null; botMallet.pointerId = null;
+        guestRemoteTarget = { x: W / 2, y: 145, active: false };
+        guestSnap = null;
+        clearPowerups();
+        resetPositions('center');
+        rebuildCourtCache();
+
+        if (gameMode === 'online') {
+          netPill.classList.remove('hidden');
+          netRoleText.textContent = isHost ? 'المضيف (أسفل)' : 'الضيف (أسفل)';
+        } else if (gameMode === 'cloud') {
+          netPill.classList.remove('hidden');
+          netRoleText.textContent = cloudSlot === 1 ? '☁️ سحابي (لاعب 1)' : '☁️ سحابي (لاعب 2)';
+        } else {
+          netPill.classList.add('hidden');
+        }
+
+        state = 'playing';
+        showOverlay(null);
+
+        if (gameMode === 'online' && isHost) {
+          sendNet({
+            t: 'start', win: targetScore,
+            th: currentThemeId, sb: botShapeId, st: topShapeId, pk: puckStyleId, pu: powerUpsEnabled
+          }, true);
+          broadcastSnapshot(true);
+        }
+      }
+
+      function clearRelQueue() {
+        for (const item of pendingRelMsgs.values()) clearInterval(item.iv);
+        pendingRelMsgs.clear();
+        handledRelIds.clear();
+      }
+
+      function closeNetwork() {
+        if (connectTimeout) { clearTimeout(connectTimeout); connectTimeout = null; }
+        if (cloudTimeout) { clearTimeout(cloudTimeout); cloudTimeout = null; }
+        clearRelQueue();
+        try { if (netConn) netConn.close(); } catch (e) {}
+        try { if (netPeer) netPeer.destroy(); } catch (e) {}
+        try { if (cloudWS) { cloudWS.onclose = null; cloudWS.close(); } } catch (e) {}
+        netConn = null; netPeer = null; cloudWS = null;
+        guestSnap = null; cloudSnap = null;
+        outSeq = 0; lastInSeq = 0; lastSentInX = -999; lastSentInY = -999;
+        netPill.classList.add('hidden');
+      }
+
+      function sendCloud(obj) {
+        try {
+          if (cloudWS && cloudWS.readyState === 1 && cloudWS.bufferedAmount < 2048) {
+            cloudWS.send(JSON.stringify(obj));
+          }
+        } catch (e) {}
+      }
+
+      // إرسال سريع غير محظور (UDP-style) مع حماية امتلاء الذاكرة المؤقتة
+      function sendFast(msg) {
+        try {
+          if (!netConn || !netConn.open) return;
+          if (netConn.dataChannel && netConn.dataChannel.bufferedAmount > 1536) return;
+          netConn.send(msg);
+        } catch (e) {}
+      }
+
+      // إرسال مضمون للرسائل الحرجة فقط (بداية، هدف، إيقاف، فوز) عبر ACK خفيف
+      function sendReliable(msg) {
+        if (!netConn || !netConn.open) return;
+        const rid = ++relMsgId;
+        const packet = Object.assign({ _r: rid }, msg);
+        const trySend = () => {
+          try { if (netConn && netConn.open) netConn.send(packet); } catch (e) {}
+        };
+        trySend();
+        let tries = 0;
+        const iv = setInterval(() => {
+          tries++;
+          if (!netConn || !netConn.open || tries >= 12) {
+            clearInterval(iv);
+            pendingRelMsgs.delete(rid);
+            return;
+          }
+          trySend();
+        }, 220);
+        pendingRelMsgs.set(rid, { iv });
+      }
+
+      function sendNet(msg, critical = false) {
+        if (critical) sendReliable(msg);
+        else sendFast(msg);
+      }
+
+      function goMainMenu() {
+        closeNetwork();
+        state = 'menu';
+        gameMode = 'solo';
+        topMallet.pointerId = null; botMallet.pointerId = null;
+        clearPowerups();
+        resetPositions('center');
+        showOverlay('main');
+      }
+
+      function togglePause() {
+        if (gameMode === 'online' && !isHost) return;
+        if (gameMode === 'cloud') {
+          sendCloud({ t: 'pause' });
+          return;
+        }
+        if (state === 'playing' || state === 'goalPause') {
+          state = 'paused';
+          topMallet.pointerId = null; botMallet.pointerId = null;
+          restartMidBtn.classList.toggle('hidden', gameMode === 'online' && !isHost);
+          showOverlay('pause');
+          if (gameMode === 'online' && isHost) sendNet({ t: 'pause', p: true }, true);
+        } else if (state === 'paused') {
+          state = goalPauseTimer > 0 ? 'goalPause' : 'playing';
+          showOverlay(null);
+          lastTime = performance.now();
+          if (gameMode === 'online' && isHost) sendNet({ t: 'pause', p: false }, true);
+        }
+      }
+
+      // ===== التحكم باللمس المتعدد =====
+      const keys = {};
+      window.addEventListener('keydown', (e) => {
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+        keys[e.code] = true;
+        if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
+      });
+      window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+      function getCanvasPoint(e) {
+        const rect = canvas.getBoundingClientRect();
+        let x = ((e.clientX - rect.left) / rect.width) * W;
+        let y = ((e.clientY - rect.top) / rect.height) * H;
+        if (isFlippedView()) { x = W - x; y = H - y; }
+        return { x, y };
+      }
+
+      function getRawCanvasPoint(e) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: ((e.clientX - rect.left) / rect.width) * W,
+          y: ((e.clientY - rect.top) / rect.height) * H
+        };
+      }
+
+      function clampMalletTarget(m, isTop, x, y) {
+        const minX = PAD + m.r + 3;
+        const maxX = W - PAD - m.r - 3;
+        const minY = isTop ? PAD + m.r + 3 : H / 2 + m.r + 2;
+        const maxY = isTop ? H / 2 - m.r - 2 : H - PAD - m.r - 3;
+        m.targetX = Math.max(minX, Math.min(maxX, x));
+        m.targetY = Math.max(minY, Math.min(maxY, y));
+      }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        if (state !== 'playing' && state !== 'goalPause') return;
+        ensureAudio();
+
+        const raw = getRawCanvasPoint(e);
+        const pausePos = isFlippedView()
+          ? { x: W - PAUSE_X, y: H - PAUSE_Y }
+          : { x: PAUSE_X, y: PAUSE_Y };
+        if (Math.hypot(raw.x - pausePos.x, raw.y - pausePos.y) <= PAUSE_R + 10) {
+          togglePause();
+          return;
+        }
+
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        const pt = getCanvasPoint(e);
+
+        if (gameMode === 'local2p') {
+          if (pt.y < H / 2) {
+            if (topMallet.pointerId === null) {
+              topMallet.pointerId = e.pointerId;
+              clampMalletTarget(topMallet, true, pt.x, pt.y);
+            }
+          } else {
+            if (botMallet.pointerId === null) {
+              botMallet.pointerId = e.pointerId;
+              clampMalletTarget(botMallet, false, pt.x, pt.y);
+            }
+          }
+        } else if (isFlippedView()) {
+          topMallet.pointerId = e.pointerId;
+          clampMalletTarget(topMallet, true, pt.x, pt.y);
+        } else {
+          botMallet.pointerId = e.pointerId;
+          clampMalletTarget(botMallet, false, pt.x, pt.y);
+        }
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (state !== 'playing' && state !== 'goalPause') return;
+        if (e.pointerId === botMallet.pointerId) clampMalletTarget(botMallet, false, getCanvasPoint(e).x, getCanvasPoint(e).y);
+        else if (e.pointerId === topMallet.pointerId) clampMalletTarget(topMallet, true, getCanvasPoint(e).x, getCanvasPoint(e).y);
+      });
+
+      function releasePointer(e) {
+        if (e.pointerId === botMallet.pointerId) botMallet.pointerId = null;
+        if (e.pointerId === topMallet.pointerId) topMallet.pointerId = null;
+      }
+      canvas.addEventListener('pointerup', releasePointer);
+      canvas.addEventListener('pointercancel', releasePointer);
+      canvas.addEventListener('lostpointercapture', releasePointer);
+
+      // ===== الذكاء الاصطناعي =====
+      const AI_PROFILES = {
+        easy:   { speed: 350, reactY: 0.45, error: 30, aggression: 0.35 },
+        medium: { speed: 540, reactY: 0.58, error: 14, aggression: 0.62 },
+        hard:   { speed: 770, reactY: 0.74, error: 5,  aggression: 0.86 },
+        insane: { speed: 1020, reactY: 0.90, error: 0, aggression: 1.00 }
+      };
+
+      function updateAI(dt) {
+        const cfg = AI_PROFILES[aiDiff] || AI_PROFILES.medium;
+        const freezeFactor = topMallet.freezeTimer > 0 ? 0.48 : 1;
+        let tx = W / 2, ty = 112;
+
+        const puckInTop = puck.y < H / 2 + 12;
+        const puckComingUp = puck.vy < -25;
+
+        if (puckInTop) {
+          if (puck.y < topMallet.y - 6) {
+            const goRight = puck.x < W / 2;
+            tx = Math.max(PAD + topMallet.r + 6, Math.min(W - PAD - topMallet.r - 6, puck.x + (goRight ? 74 : -74)));
+            ty = Math.max(PAD + topMallet.r + 6, puck.y - 46);
+          } else {
+            const targetGoalX = W / 2 + (botMallet.x > W / 2 ? -42 : 42);
+            const ang = Math.atan2(H - puck.y, targetGoalX - puck.x);
+            const distToPuck = Math.hypot(puck.x - topMallet.x, puck.y - topMallet.y);
+            if (distToPuck < 100) { tx = puck.x - Math.cos(ang) * 8; ty = puck.y + 18; }
+            else { tx = puck.x - Math.cos(ang) * (topMallet.r * 0.65); ty = puck.y - Math.sin(ang) * (topMallet.r * 0.65); }
+          }
+        } else if (puckComingUp && puck.y < H * cfg.reactY) {
+          const tToReach = (130 - puck.y) / puck.vy;
+          let predX = puck.x + puck.vx * Math.min(0.68, Math.max(0, tToReach));
+          if (predX < PAD + PUCK_R) predX = (PAD + PUCK_R) * 2 - predX;
+          if (predX > W - PAD - PUCK_R) predX = (W - PAD - PUCK_R) * 2 - predX;
+          const jitter = Math.sin(timeAcc * 5) * cfg.error;
+          tx = Math.max(GOAL_L - 22, Math.min(GOAL_R + 22, predX + jitter));
+          ty = 105 + cfg.aggression * 55;
+        } else {
+          tx = W / 2 + (puck.x - W / 2) * 0.35;
+          ty = 102;
+        }
+
+        clampMalletTarget(topMallet, true, tx, ty);
+        const dx = topMallet.targetX - topMallet.x;
+        const dy = topMallet.targetY - topMallet.y;
+        const dist = Math.hypot(dx, dy);
+        const maxStep = cfg.speed * freezeFactor * dt;
+        const prevX = topMallet.x, prevY = topMallet.y;
+
+        if (dist > maxStep && dist > 0.1) {
+          topMallet.x += (dx / dist) * maxStep;
+          topMallet.y += (dy / dist) * maxStep;
+        } else {
+          topMallet.x = topMallet.targetX;
+          topMallet.y = topMallet.targetY;
+        }
+        topMallet.vx = (topMallet.x - prevX) / Math.max(dt, 0.001);
+        topMallet.vy = (topMallet.y - prevY) / Math.max(dt, 0.001);
+      }
+
+      function moveHumanMallet(m, isTop, dt, useKeyboardKeys) {
+        const prevX = m.x, prevY = m.y;
+        const freezeFactor = m.freezeTimer > 0 ? 0.45 : 1;
+
+        if (useKeyboardKeys) {
+          let kx = 0, ky = 0;
+          if (useKeyboardKeys === 'wasd') {
+            if (keys['KeyW']) ky -= 1; if (keys['KeyS']) ky += 1;
+            if (keys['KeyA']) kx -= 1; if (keys['KeyD']) kx += 1;
+          } else if (useKeyboardKeys === 'arrows') {
+            if (keys['ArrowUp']) ky -= 1; if (keys['ArrowDown']) ky += 1;
+            if (keys['ArrowLeft']) kx -= 1; if (keys['ArrowRight']) kx += 1;
+          } else if (useKeyboardKeys === 'both') {
+            if (keys['ArrowUp'] || keys['KeyW']) ky -= 1;
+            if (keys['ArrowDown'] || keys['KeyS']) ky += 1;
+            if (keys['ArrowLeft'] || keys['KeyA']) kx -= 1;
+            if (keys['ArrowRight'] || keys['KeyD']) kx += 1;
+          }
+          if (kx !== 0 || ky !== 0) {
+            const len = Math.hypot(kx, ky);
+            clampMalletTarget(m, isTop, m.targetX + (kx / len) * 680 * freezeFactor * dt, m.targetY + (ky / len) * 680 * freezeFactor * dt);
+          }
+        }
+
+        const follow = Math.min(1, dt * (38 * freezeFactor));
+        m.x += (m.targetX - m.x) * follow;
+        m.y += (m.targetY - m.y) * follow;
+
+        const minX = PAD + m.r + 3, maxX = W - PAD - m.r - 3;
+        const minY = isTop ? PAD + m.r + 3 : H / 2 + m.r + 2;
+        const maxY = isTop ? H / 2 - m.r - 2 : H - PAD - m.r - 3;
+        m.x = Math.max(minX, Math.min(maxX, m.x));
+        m.y = Math.max(minY, Math.min(maxY, m.y));
+
+        let ivx = (m.x - prevX) / Math.max(dt, 0.001);
+        let ivy = (m.y - prevY) / Math.max(dt, 0.001);
+        const ispd = Math.hypot(ivx, ivy);
+        if (ispd > 1650) { ivx = (ivx / ispd) * 1650; ivy = (ivy / ispd) * 1650; }
+        if (ispd < 12) { m.vx *= 0.4; m.vy *= 0.4; }
+        else { m.vx = m.vx * 0.35 + ivx * 0.65; m.vy = m.vy * 0.35 + ivy * 0.65; }
+      }
+
+      function activatePowerup(orb, who) {
+        const actor = who === 'top' ? topMallet : botMallet;
+        const opponent = who === 'top' ? botMallet : topMallet;
+        const info = PU_TYPES.find(x => x.type === orb.type) || PU_TYPES[0];
+
+        if (orb.type === 'giant') actor.giantTimer = 7.0;
+        else if (orb.type === 'shield') actor.shieldTimer = 7.5;
+        else if (orb.type === 'fire') {
+          puck.fireTimer = 4.5;
+          const sp = Math.hypot(puck.vx, puck.vy);
+          if (sp > 20) { const mult = Math.min(1380 / sp, 1.48); puck.vx *= mult; puck.vy *= mult; }
+        } else if (orb.type === 'freeze') opponent.freezeTimer = 4.5;
+
+        SFX.powerup();
+        vibrate([25, 20, 35]);
+        spawnSparks(orb.x, orb.y, info.color, 20, 1.15);
+        spawnShockwave(orb.x, orb.y, info.color, 95);
+        showCallout(info.label, info.color, orb.y < H / 2 ? H / 2 - 125 : H / 2 + 125);
+        emitNetEvent({ k: 'pu', x: Math.round(orb.x), y: Math.round(orb.y), c: info.color, tx: info.label });
+      }
+
+      function collidePuckWithMallet(m, who, malletColor) {
+        const dx = puck.x - m.x;
+        const dy = puck.y - m.y;
+        const dist = Math.hypot(dx, dy);
+        const minDist = puck.r + m.r;
+        if (dist >= minDist) return;
+
+        const nx = dist > 0.001 ? dx / dist : 0;
+        const ny = dist > 0.001 ? dy / dist : (who === 'top' ? 1 : -1);
+
+        const overlap = minDist - dist;
+        puck.x += nx * (overlap + 0.6);
+        puck.y += ny * (overlap + 0.6);
+
+        const rvx = puck.vx - m.vx;
+        const rvy = puck.vy - m.vy;
+        const velAlongNormal = rvx * nx + rvy * ny;
+
+        if (velAlongNormal < 0) {
+          const j = -1.93 * velAlongNormal;
+          puck.vx += j * nx + m.vx * 0.28;
+          puck.vy += j * ny + m.vy * 0.28;
+
+          const malletSpd = Math.hypot(m.vx, m.vy);
+          let spd = Math.hypot(puck.vx, puck.vy);
+          if (spd < 290 && malletSpd > 60) {
+            const boost = 330 / Math.max(spd, 1);
+            puck.vx *= boost; puck.vy *= boost; spd = 330;
+          }
+
+          const maxSpd = puck.fireTimer > 0 ? 1420 : 1280;
+          if (spd > maxSpd) {
+            puck.vx = (puck.vx / spd) * maxSpd;
+            puck.vy = (puck.vy / spd) * maxSpd;
+            spd = maxSpd;
+          }
+
+          if (puck.lastHitter !== who) {
+            currentRally += 1;
+            if (currentRally > bestRally) bestRally = currentRally;
+          }
+          puck.lastHitter = who;
+          totalHits += 1;
+          const kmh = Math.round(spd * 0.145);
+          if (kmh > maxShotKmh) maxShotKmh = kmh;
+
+          const impact = Math.min(1.6, Math.abs(velAlongNormal) / 520 + 0.45);
+          const isSuper = spd > 960;
+          const cx = m.x + nx * m.r;
+          const cy = m.y + ny * m.r;
+
+          const nowMs = performance.now();
+          if (nowMs - lastHitFxTime > 55) {
+            lastHitFxTime = nowMs;
+            if (isSuper) {
+              SFX.superHit();
+              shakeTime = Math.max(shakeTime, 0.12);
+              vibrate(22);
+              spawnShockwave(cx, cy, malletColor, 85);
+              showCallout(`⚡ تسديدة صاروخية ${kmh} km/h`, '#fde047', H / 2 - 125);
+            } else {
+              SFX.hit(impact);
+              if (gameMode !== 'online') vibrate(Math.round(10 * impact));
+            }
+            spawnSparks(cx, cy, malletColor, Math.round(6 + impact * 6), impact);
+            emitNetEvent({
+              k: 'hit', x: Math.round(cx), y: Math.round(cy), c: malletColor,
+              p: Math.round(impact * 10) / 10, sup: isSuper ? kmh : 0
+            });
+          }
+        }
+      }
+
+      function onGoal(scorer) {
+        if (scorer === 'bottom') scoreBot += 1;
+        else scoreTop += 1;
+
+        const theme = getTheme();
+        const color = scorer === 'bottom' ? theme.botMallet : theme.topMallet;
+        const gx = Math.max(GOAL_L + 20, Math.min(GOAL_R - 20, puck.x));
+        const gy = scorer === 'bottom' ? PAD + 14 : H - PAD - 14;
+
+        spawnSparks(gx, gy, color, 28, 1.4);
+        spawnSparks(gx, gy, '#ffffff', 12, 1.1);
+        spawnShockwave(gx, gy, color, 150);
+        goalFlash = { color, alpha: 0.45 };
+        goalBanner = { text: 'GOAL!', color, timer: 1.05 };
+        shakeTime = 0.26;
+        vibrate([60, 40, 80]);
+
+        emitNetEvent({ k: 'goal', x: Math.round(gx), y: Math.round(gy), c: color });
+
+        if (scoreBot >= targetScore || scoreTop >= targetScore) {
+          SFX.win();
+          emitNetEvent({ k: 'win' });
+          state = 'win';
+          showWinScreen();
+          if (gameMode === 'online' && isHost) {
+            broadcastSnapshot(true);
+            sendNet({ t: 'win', sb: scoreBot, st: scoreTop, ms: maxShotKmh, br: bestRally, th: totalHits }, true);
+          }
+          return;
+        }
+
+        SFX.goal();
+        state = 'goalPause';
+        goalPauseTimer = 1.1;
+        puck.vx = puck.vy = 0;
+        puck.y = scorer === 'bottom' ? -60 : H + 60;
+        puck.nextServe = scorer === 'bottom' ? 'top' : 'bottom';
+      }
+
+      function showWinScreen() {
+        const theme = getTheme();
+        const botWon = scoreBot >= scoreTop;
+        document.getElementById('winScoreBottom').textContent = scoreBot;
+        document.getElementById('winScoreTop').textContent = scoreTop;
+        document.getElementById('winScoreBottom').style.color = theme.botMallet;
+        document.getElementById('winScoreTop').style.color = theme.topMallet;
+        document.getElementById('winBoxBot').style.borderColor = theme.botMallet;
+        document.getElementById('winBoxTop').style.borderColor = theme.topMallet;
+
+        document.getElementById('statMaxSpeed').textContent = `${maxShotKmh} km/h`;
+        document.getElementById('statBestRally').textContent = bestRally;
+        document.getElementById('statTotalHits').textContent = totalHits;
+
+        if (gameMode === 'solo') {
+          document.getElementById('winTitle').textContent = botWon ? '🏆 لقد فزت!' : '🤖 فاز الذكاء الاصطناعي!';
+          document.getElementById('winSub').textContent = botWon ? 'أداء مذهل وتسديدات رائعة!' : 'حاول مجدداً وانتقم في الجولة التالية!';
+        } else if (gameMode === 'online' || gameMode === 'cloud') {
+          const isP1 = gameMode === 'cloud' ? (cloudSlot === 1) : isHost;
+          const iWon = (isP1 && botWon) || (!isP1 && !botWon);
+          document.getElementById('winTitle').textContent = iWon ? '🏆 أنت الفائز!' : '⚡ فاز صديقك!';
+          document.getElementById('winSub').textContent = botWon ? 'فاز اللاعب 1 بالمباراة!' : 'فاز اللاعب 2 بالمباراة!';
+        } else {
+          document.getElementById('winTitle').textContent = botWon ? '🏆 فاز اللاعب 1 (أسفل)!' : '🏆 فاز اللاعب 2 (أعلى)!';
+          document.getElementById('winSub').textContent = 'مباراة حماسية نارية!';
+        }
+
+        if (gameMode === 'online' && !isHost) {
+          playAgainBtn.textContent = 'بانتظار السيرفر لمباراة جديدة...';
+          playAgainBtn.disabled = true;
+        } else {
+          playAgainBtn.textContent = 'مباراة جديدة 🔄';
+          playAgainBtn.disabled = false;
+        }
+        showOverlay('win');
+      }
+
+      function tickVisualEffects(dt) {
+        timeAcc += dt;
+        if (shakeTime > 0) shakeTime = Math.max(0, shakeTime - dt);
+        if (goalFlash.alpha > 0) goalFlash.alpha = Math.max(0, goalFlash.alpha - dt * 1.35);
+        if (goalBanner.timer > 0) goalBanner.timer = Math.max(0, goalBanner.timer - dt);
+        if (callout.timer > 0) callout.timer = Math.max(0, callout.timer - dt);
+        for (const k of ['tl', 'tr', 'bl', 'br']) {
+          if (wallFlashes[k] > 0) wallFlashes[k] = Math.max(0, wallFlashes[k] - dt * 3.2);
+        }
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          p.vx *= 0.94; p.vy *= 0.94;
+          p.life -= dt;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const sw = shockwaves[i];
+          sw.r += (sw.maxR - sw.r) * Math.min(1, dt * 10) + 60 * dt;
+          sw.alpha -= dt * 2.4;
+          if (sw.alpha <= 0) shockwaves.splice(i, 1);
+        }
+      }
+
+      function updateSimulation(dt) {
+        tickVisualEffects(dt);
+        const theme = getTheme();
+
+        for (const m of [topMallet, botMallet]) {
+          if (m.giantTimer > 0) m.giantTimer = Math.max(0, m.giantTimer - dt);
+          if (m.freezeTimer > 0) m.freezeTimer = Math.max(0, m.freezeTimer - dt);
+          if (m.shieldTimer > 0) m.shieldTimer = Math.max(0, m.shieldTimer - dt);
+          const targetR = m.giantTimer > 0 ? BASE_MALLET_R * 1.3 : BASE_MALLET_R;
+          m.r += (targetR - m.r) * Math.min(1, dt * 10);
+        }
+        if (puck.fireTimer > 0) puck.fireTimer = Math.max(0, puck.fireTimer - dt);
+
+        if (powerUpsEnabled && state === 'playing' && !activeOrb) {
+          orbSpawnTimer -= dt;
+          if (orbSpawnTimer <= 0) {
+            const pick = PU_TYPES[Math.floor(Math.random() * PU_TYPES.length)];
+            activeOrb = {
+              x: Math.round(95 + Math.random() * (W - 190)),
+              y: Math.round(H / 2 + (Math.random() - 0.5) * 210),
+              type: pick.type, icon: pick.icon, color: pick.color, r: 22
+            };
+            spawnShockwave(activeOrb.x, activeOrb.y, activeOrb.color, 65);
+          }
+        }
+
+        if (gameMode === 'solo') {
+          moveHumanMallet(botMallet, false, dt, 'both');
+          updateAI(dt);
+        } else if (gameMode === 'local2p') {
+          moveHumanMallet(botMallet, false, dt, 'wasd');
+          moveHumanMallet(topMallet, true, dt, 'arrows');
+        } else if (gameMode === 'online' && isHost) {
+          moveHumanMallet(botMallet, false, dt, 'both');
+          if (guestRemoteTarget.active) clampMalletTarget(topMallet, true, guestRemoteTarget.x, guestRemoteTarget.y);
+          moveHumanMallet(topMallet, true, dt, null);
+        }
+
+        if (state === 'goalPause') {
+          goalPauseTimer -= dt;
+          if (goalPauseTimer <= 0) {
+            resetPositions(puck.nextServe || 'center');
+            state = 'playing';
+          }
+        } else if (state === 'playing') {
+          const SUBS = 4;
+          const sdt = dt / SUBS;
+          const drag = Math.pow(puck.fireTimer > 0 ? 0.996 : 0.992, sdt * 60);
+          const leftWall = PAD + WALL_THICK / 2;
+          const rightWall = W - PAD - WALL_THICK / 2;
+          const topWall = PAD + WALL_THICK / 2;
+          const botWall = H - PAD - WALL_THICK / 2;
+
+          for (let s = 0; s < SUBS; s++) {
+            puck.x += puck.vx * sdt;
+            puck.y += puck.vy * sdt;
+            puck.vx *= drag;
+            puck.vy *= drag;
+
+            collidePuckWithMallet(botMallet, 'bottom', theme.botMallet);
+            collidePuckWithMallet(topMallet, 'top', theme.topMallet);
+
+            if (activeOrb && puck.lastHitter && Math.hypot(puck.x - activeOrb.x, puck.y - activeOrb.y) < puck.r + activeOrb.r) {
+              const collected = activeOrb;
+              activeOrb = null;
+              orbSpawnTimer = 8.5 + Math.random() * 3.5;
+              activatePowerup(collected, puck.lastHitter);
+            }
+
+            const triggerWallFx = (wx, wy, q, vel, customColor = null) => {
+              wallFlashes[q] = 1;
+              const nowMs = performance.now();
+              if (nowMs - lastWallFxTime < 45) return;
+              lastWallFxTime = nowMs;
+              const pwr = Math.min(1.4, Math.abs(vel) / 480 + 0.35);
+              SFX.wall(pwr);
+              spawnSparks(wx, wy, customColor || theme[q], 7, pwr * 0.8);
+              emitNetEvent({ k: 'wall', x: Math.round(wx), y: Math.round(wy), q, p: Math.round(pwr * 10) / 10 });
+            };
+
+            if (puck.x - puck.r < leftWall) {
+              puck.x = leftWall + puck.r;
+              puck.vx = Math.abs(puck.vx) * 0.94;
+              triggerWallFx(leftWall, puck.y, puck.y < H / 2 ? 'tl' : 'bl', puck.vx);
+            } else if (puck.x + puck.r > rightWall) {
+              puck.x = rightWall - puck.r;
+              puck.vx = -Math.abs(puck.vx) * 0.94;
+              triggerWallFx(rightWall, puck.y, puck.y < H / 2 ? 'tr' : 'br', puck.vx);
+            }
+
+            const inGoalMouth = puck.x > GOAL_L + puck.r * 0.35 && puck.x < GOAL_R - puck.r * 0.35;
+
+            if (puck.y - puck.r < topWall) {
+              if (inGoalMouth && topMallet.shieldTimer <= 0) {
+                if (puck.y < -puck.r * 0.6) { onGoal('bottom'); break; }
+              } else {
+                puck.y = topWall + puck.r;
+                puck.vy = Math.abs(puck.vy) * 0.96;
+                triggerWallFx(puck.x, topWall, puck.x < W / 2 ? 'tl' : 'tr', puck.vy, inGoalMouth ? '#38bdf8' : null);
+              }
+            } else if (puck.y + puck.r > botWall) {
+              if (inGoalMouth && botMallet.shieldTimer <= 0) {
+                if (puck.y > H + puck.r * 0.6) { onGoal('top'); break; }
+              } else {
+                puck.y = botWall - puck.r;
+                puck.vy = -Math.abs(puck.vy) * 0.96;
+                triggerWallFx(puck.x, botWall, puck.x < W / 2 ? 'bl' : 'br', puck.vy, inGoalMouth ? '#38bdf8' : null);
+              }
+            }
+
+            const posts = [
+              { x: GOAL_L, y: topWall }, { x: GOAL_R, y: topWall },
+              { x: GOAL_L, y: botWall }, { x: GOAL_R, y: botWall }
+            ];
+            for (const post of posts) {
+              const pdx = puck.x - post.x, pdy = puck.y - post.y;
+              const pd = Math.hypot(pdx, pdy);
+              const pMin = puck.r + 5;
+              if (pd < pMin && pd > 0.001) {
+                const pnx = pdx / pd, pny = pdy / pd;
+                puck.x = post.x + pnx * pMin;
+                puck.y = post.y + pny * pMin;
+                const dot = puck.vx * pnx + puck.vy * pny;
+                if (dot < 0) {
+                  puck.vx -= 1.85 * dot * pnx;
+                  puck.vy -= 1.85 * dot * pny;
+                  SFX.wall(0.9);
+                }
+              }
+            }
+          }
+
+          const spd = Math.hypot(puck.vx, puck.vy);
+          const nearCorner = (puck.x < PAD + 48 || puck.x > W - PAD - 48) && (puck.y < PAD + 48 || puck.y > H - PAD - 48);
+          if (nearCorner && spd < 35) {
+            stuckTimer += dt;
+            if (stuckTimer > 1.3) {
+              stuckTimer = 0;
+              const toCenter = Math.atan2(H / 2 - puck.y, W / 2 - puck.x);
+              puck.vx += Math.cos(toCenter) * 260;
+              puck.vy += Math.sin(toCenter) * 260;
+              spawnSparks(puck.x, puck.y, theme.puckGlow, 8, 0.7);
+            }
+          } else {
+            stuckTimer = 0;
+          }
+
+          if (perfMode !== 'ultra') {
+            if (spd > 190 || puck.fireTimer > 0) {
+              puck.trail.push({ x: puck.x, y: puck.y, alpha: Math.min(0.65, spd / 1050 + (puck.fireTimer > 0 ? 0.25 : 0)) });
+              if (puck.trail.length > (puck.fireTimer > 0 ? 11 : 7)) puck.trail.shift();
+            } else if (puck.trail.length > 0) {
+              puck.trail.shift();
+            }
+          } else if (puck.trail.length > 0) {
+            puck.trail.length = 0;
+          }
+        }
+
+        // مزامنة UDP خفيفة (25Hz) مع إرسال فوري عند الأحداث فقط
+        if (gameMode === 'online' && isHost) {
+          syncAcc += dt;
+          if (syncAcc >= 0.04 || pendingNetEvents.length > 0) {
+            syncAcc = 0;
+            broadcastSnapshot(false);
+          }
+          pingAcc += dt;
+          if (pingAcc >= 2.0) {
+            pingAcc = 0;
+            sendFast({ t: 'ping', ts: Date.now() });
+          }
+        }
+      }
+
+      function updateGuest(dt) {
+        tickVisualEffects(dt);
+        moveHumanMallet(topMallet, true, dt, 'both');
+
+        // إرسال حركة الضيف فقط عندما يتحرك إصبعه فعلياً (يوفر 70% من العبء على جوال المضيف!)
+        syncAcc += dt;
+        if (syncAcc >= 0.036) {
+          const rx = Math.round(topMallet.targetX);
+          const ry = Math.round(topMallet.targetY);
+          if (Math.abs(rx - lastSentInX) >= 2 || Math.abs(ry - lastSentInY) >= 2) {
+            syncAcc = 0;
+            lastSentInX = rx; lastSentInY = ry;
+            sendFast({ t: 'in', q: ++outSeq, x: rx, y: ry });
+          }
+        }
+        pingAcc += dt;
+        if (pingAcc >= 2.0) {
+          pingAcc = 0;
+          sendFast({ t: 'ping', ts: Date.now() });
+        }
+
+        if (guestSnap) {
+          const d = guestSnap; // [px, py, pvx, pvy, bx, by, st, sb, br, tr, bf, tf, bs, ts, pf]
+          const k = Math.min(1, dt * 20);
+          botMallet.x += (d[4] - botMallet.x) * k;
+          botMallet.y += (d[5] - botMallet.y) * k;
+          botMallet.r = d[8]; topMallet.r = d[9];
+          botMallet.freezeTimer = d[10]; topMallet.freezeTimer = d[11];
+          botMallet.shieldTimer = d[12]; topMallet.shieldTimer = d[13];
+          puck.fireTimer = d[14];
+
+          // توقع حركة القرص بالسرعة (Extrapolation) + تصحيح ناعم لمنع التقطيع عند الضيف!
+          if (Math.hypot(d[0] - puck.x, d[1] - puck.y) > 155) {
+            puck.x = d[0]; puck.y = d[1]; puck.trail = [];
+          } else {
+            puck.x += d[2] * dt;
+            puck.y += d[3] * dt;
+            puck.x += (d[0] - puck.x) * Math.min(1, dt * 18);
+            puck.y += (d[1] - puck.y) * Math.min(1, dt * 18);
+            if (perfMode !== 'ultra' && Math.hypot(d[2], d[3]) > 180) {
+              puck.trail.push({ x: puck.x, y: puck.y, alpha: 0.42 });
+              if (puck.trail.length > 7) puck.trail.shift();
+            } else if (puck.trail.length > 0) {
+              puck.trail.shift();
+            }
+          }
+        }
+      }
+
+      // ===== تحديث العميل في وضع السيرفر السحابي (بدون أي حساب فيزياء على الجوال!) =====
+      function updateCloudClient(dt) {
+        tickVisualEffects(dt);
+        const myIsTop = cloudSlot === 2;
+        const myMallet = myIsTop ? topMallet : botMallet;
+        const oppMallet = myIsTop ? botMallet : topMallet;
+
+        moveHumanMallet(myMallet, myIsTop, dt, 'both');
+
+        syncAcc += dt;
+        if (syncAcc >= 0.032) {
+          const rx = Math.round(myMallet.targetX);
+          const ry = Math.round(myMallet.targetY);
+          if (Math.abs(rx - lastSentInX) >= 2 || Math.abs(ry - lastSentInY) >= 2) {
+            syncAcc = 0;
+            lastSentInX = rx; lastSentInY = ry;
+            sendCloud({ t: 'in', x: rx, y: ry });
+          }
+        }
+
+        pingAcc += dt;
+        if (pingAcc >= 2.0) {
+          pingAcc = 0;
+          sendCloud({ t: 'ping', ts: Date.now() });
+        }
+
+        if (cloudSnap) {
+          // [px, py, pvx, pvy, bx, by, tx, ty, st, sb, br, tr, bf, tf, bs, ts, pf]
+          const d = cloudSnap;
+          const k = Math.min(1, dt * 22);
+          const oppX = myIsTop ? d[4] : d[6];
+          const oppY = myIsTop ? d[5] : d[7];
+          oppMallet.x += (oppX - oppMallet.x) * k;
+          oppMallet.y += (oppY - oppMallet.y) * k;
+
+          botMallet.r = d[10]; topMallet.r = d[11];
+          botMallet.freezeTimer = d[12]; topMallet.freezeTimer = d[13];
+          botMallet.shieldTimer = d[14]; topMallet.shieldTimer = d[15];
+          puck.fireTimer = d[16];
+
+          if (Math.hypot(d[0] - puck.x, d[1] - puck.y) > 155) {
+            puck.x = d[0]; puck.y = d[1]; puck.trail = [];
+          } else {
+            puck.x += d[2] * dt;
+            puck.y += d[3] * dt;
+            puck.x += (d[0] - puck.x) * Math.min(1, dt * 18);
+            puck.y += (d[1] - puck.y) * Math.min(1, dt * 18);
+            if (perfMode !== 'ultra' && Math.hypot(d[2], d[3]) > 180) {
+              puck.trail.push({ x: puck.x, y: puck.y, alpha: 0.42 });
+              if (puck.trail.length > 7) puck.trail.shift();
+            } else if (puck.trail.length > 0) {
+              puck.trail.shift();
+            }
+          }
+        }
+      }
+
+      function applyNetEvents(evList) {
+        const theme = getTheme();
+        for (const ev of evList) {
+          if (ev.k === 'hit') {
+            if (ev.sup) {
+              SFX.superHit();
+              spawnShockwave(ev.x, ev.y, ev.c, 85);
+              showCallout(`⚡ تسديدة صاروخية ${ev.sup} km/h`, '#fde047', H / 2 - 125);
+            } else SFX.hit(ev.p);
+            spawnSparks(ev.x, ev.y, ev.c, 10, ev.p);
+          } else if (ev.k === 'wall') {
+            wallFlashes[ev.q] = 1;
+            SFX.wall(ev.p);
+            spawnSparks(ev.x, ev.y, theme[ev.q], 8, ev.p * 0.8);
+          } else if (ev.k === 'pu') {
+            SFX.powerup();
+            spawnSparks(ev.x, ev.y, ev.c, 18, 1.1);
+            spawnShockwave(ev.x, ev.y, ev.c, 90);
+            showCallout(ev.tx, ev.c, H / 2 - 120);
+          } else if (ev.k === 'goal') {
+            SFX.goal();
+            vibrate([50, 30, 70]);
+            goalFlash = { color: ev.c, alpha: 0.45 };
+            goalBanner = { text: 'GOAL!', color: ev.c, timer: 1.05 };
+            shakeTime = 0.25;
+            spawnSparks(ev.x, ev.y, ev.c, 28, 1.3);
+            spawnShockwave(ev.x, ev.y, ev.c, 140);
+          } else if (ev.k === 'win') SFX.win();
+        }
+      }
+
+      function handleCloudMessage(msg) {
+        if (!msg || !msg.t) return;
+        if (msg.t === 'pong') { pingValEl.textContent = Math.max(1, Date.now() - msg.ts); return; }
+        if (msg.t === 'err') {
+          setCloudStatus(msg.msg || 'حدث خطأ في الغرفة.', 'err');
+          closeNetwork();
+          return;
+        }
+        if (msg.t === 'wait') {
+          cloudSlot = 1;
+          const roomTxt = msg.room === 'auto' ? 'بدون كود ⚡ (بانتظار الخصم...)' : ('كود الغرفة: ' + msg.room.replace(/^n/, ''));
+          cloudRoomShow.textContent = roomTxt;
+          cloudRoomShow.classList.remove('hidden');
+          setCloudStatus('أنت اللاعب 1 — بانتظار دخول صديقك من الجوال الثاني...', 'ok');
+          return;
+        }
+        if (msg.t === 'start') {
+          if (cloudTimeout) { clearTimeout(cloudTimeout); cloudTimeout = null; }
+          cloudSlot = msg.slot || 1;
+          targetScore = msg.win || 7;
+          if (msg.th) currentThemeId = msg.th;
+          if (msg.sb) botShapeId = msg.sb;
+          if (msg.st) topShapeId = msg.st;
+          if (msg.pk) puckStyleId = msg.pk;
+          powerUpsEnabled = !!msg.pu;
+          startGame('cloud');
+          return;
+        }
+        if (msg.t === 'pause') {
+          state = msg.p ? 'paused' : 'playing';
+          restartMidBtn.classList.remove('hidden');
+          showOverlay(msg.p ? 'pause' : null);
+          return;
+        }
+        if (msg.t === 'win') {
+          scoreBot = msg.sb; scoreTop = msg.st;
+          maxShotKmh = msg.ms || 0; bestRally = msg.br || 0; totalHits = msg.th || 0;
+          state = 'win';
+          showWinScreen();
+          return;
+        }
+        if (msg.t === 'left') {
+          alert('غادر اللاعب الآخر المباراة.');
+          goMainMenu();
+          return;
+        }
+        if (msg.t === 'st') {
+          if (msg.q && msg.q < lastInSeq) return;
+          if (msg.q) lastInSeq = msg.q;
+          const d = msg.d;
+          if (d) {
+            scoreTop = d[8]; scoreBot = d[9];
+            cloudSnap = d;
+          }
+          if (msg.orb) {
+            const info = PU_TYPES.find(x => x.type === msg.orb[2]) || PU_TYPES[0];
+            activeOrb = { x: msg.orb[0], y: msg.orb[1], type: info.type, icon: info.icon, color: info.color, r: 22 };
+          } else activeOrb = null;
+          if (msg.ev) applyNetEvents(msg.ev);
+        }
+      }
+
+      function broadcastSnapshot(forceCritical = false) {
+        const hasCriticalEv = pendingNetEvents.some(e => e.k === 'goal' || e.k === 'pu' || e.k === 'win');
+        const msg = {
+          t: 'st',
+          q: ++outSeq,
+          d: [
+            Math.round(puck.x), Math.round(puck.y),
+            Math.round(puck.vx), Math.round(puck.vy),
+            Math.round(botMallet.x), Math.round(botMallet.y),
+            scoreTop, scoreBot,
+            Math.round(botMallet.r), Math.round(topMallet.r),
+            Math.round(botMallet.freezeTimer * 10) / 10, Math.round(topMallet.freezeTimer * 10) / 10,
+            Math.round(botMallet.shieldTimer * 10) / 10, Math.round(topMallet.shieldTimer * 10) / 10,
+            Math.round(puck.fireTimer * 10) / 10
+          ]
+        };
+        if (activeOrb) msg.orb = [activeOrb.x, activeOrb.y, activeOrb.type];
+        if (pendingNetEvents.length > 0) {
+          msg.ev = pendingNetEvents;
+          pendingNetEvents = [];
+        }
+        sendNet(msg, forceCritical || hasCriticalEv);
+      }
+
+      function handleNetData(msg) {
+        if (!msg || !msg.t) return;
+
+        // تأكيد استلام الرسائل الحرجة (ACK)
+        if (msg.t === 'ack') {
+          const item = pendingRelMsgs.get(msg.id);
+          if (item) { clearInterval(item.iv); pendingRelMsgs.delete(msg.id); }
+          return;
+        }
+        if (msg._r) {
+          sendFast({ t: 'ack', id: msg._r });
+          if (handledRelIds.has(msg._r)) return;
+          handledRelIds.add(msg._r);
+          if (handledRelIds.size > 60) {
+            const first = handledRelIds.values().next().value;
+            handledRelIds.delete(first);
+          }
+        }
+
+        if (msg.t === 'ping') { sendFast({ t: 'pong', ts: msg.ts }); return; }
+        if (msg.t === 'pong') { pingValEl.textContent = Math.max(1, Date.now() - msg.ts); return; }
+
+        if (isHost) {
+          if (msg.t === 'in') {
+            if (msg.q && msg.q < lastInSeq) return; // تجاهل الحزم القديمة المتأخرة
+            if (msg.q) lastInSeq = msg.q;
+            guestRemoteTarget.x = Number(msg.x) || W / 2;
+            guestRemoteTarget.y = Number(msg.y) || 145;
+            guestRemoteTarget.active = true;
+          }
+          return;
+        }
+
+        if (msg.t === 'start') {
+          targetScore = msg.win || 7;
+          if (msg.th) currentThemeId = msg.th;
+          if (msg.sb) botShapeId = msg.sb;
+          if (msg.st) topShapeId = msg.st;
+          if (msg.pk) puckStyleId = msg.pk;
+          powerUpsEnabled = !!msg.pu;
+          startGame('online');
+          return;
+        }
+        if (msg.t === 'pause') {
+          state = msg.p ? 'paused' : 'playing';
+          restartMidBtn.classList.add('hidden');
+          showOverlay(msg.p ? 'pause' : null);
+          return;
+        }
+        if (msg.t === 'win') {
+          scoreBot = msg.sb; scoreTop = msg.st;
+          maxShotKmh = msg.ms || 0; bestRally = msg.br || 0; totalHits = msg.th || 0;
+          state = 'win';
+          showWinScreen();
+          return;
+        }
+        if (msg.t === 'st') {
+          if (msg.q && msg.q < lastInSeq) return; // تجاهل الحزم القديمة المتأخرة
+          if (msg.q) lastInSeq = msg.q;
+          const d = msg.d;
+          if (d) {
+            scoreTop = d[6]; scoreBot = d[7];
+            guestSnap = d;
+          }
+          if (msg.orb) {
+            const info = PU_TYPES.find(x => x.type === msg.orb[2]) || PU_TYPES[0];
+            activeOrb = { x: msg.orb[0], y: msg.orb[1], type: info.type, icon: info.icon, color: info.color, r: 22 };
+          } else activeOrb = null;
+
+          if (msg.ev) {
+            const theme = getTheme();
+            for (const ev of msg.ev) {
+              if (ev.k === 'hit') {
+                if (ev.sup) {
+                  SFX.superHit();
+                  spawnShockwave(ev.x, ev.y, ev.c, 85);
+                  showCallout(`⚡ تسديدة صاروخية ${ev.sup} km/h`, '#fde047', H / 2 - 125);
+                } else SFX.hit(ev.p);
+                vibrate(12);
+                spawnSparks(ev.x, ev.y, ev.c, 10, ev.p);
+              } else if (ev.k === 'wall') {
+                wallFlashes[ev.q] = 1;
+                SFX.wall(ev.p);
+                spawnSparks(ev.x, ev.y, theme[ev.q], 8, ev.p * 0.8);
+              } else if (ev.k === 'pu') {
+                SFX.powerup();
+                spawnSparks(ev.x, ev.y, ev.c, 18, 1.1);
+                spawnShockwave(ev.x, ev.y, ev.c, 90);
+                showCallout(ev.tx, ev.c, H / 2 - 120);
+              } else if (ev.k === 'goal') {
+                SFX.goal();
+                vibrate([50, 30, 70]);
+                goalFlash = { color: ev.c, alpha: 0.45 };
+                goalBanner = { text: 'GOAL!', color: ev.c, timer: 1.05 };
+                shakeTime = 0.25;
+                spawnSparks(ev.x, ev.y, ev.c, 28, 1.3);
+                spawnShockwave(ev.x, ev.y, ev.c, 140);
+              } else if (ev.k === 'win') SFX.win();
+            }
+          }
+        }
+      }
+
+      // ===== دوال الرسم الخفيفة (صفر shadowBlur أثناء اللعب!) =====
+      const SEG_MAP = {
+        '0': [1,1,1,1,1,1,0], '1': [0,1,1,0,0,0,0], '2': [1,1,0,1,1,0,1],
+        '3': [1,1,1,1,0,0,1], '4': [0,1,1,0,0,1,1], '5': [1,0,1,1,0,1,1],
+        '6': [1,0,1,1,1,1,1], '7': [1,1,1,0,0,0,0], '8': [1,1,1,1,1,1,1],
+        '9': [1,1,1,1,0,1,1]
+      };
+
+      function drawSevenSegDigit(ch, x, y, w, h, theme) {
+        const segs = SEG_MAP[ch] || SEG_MAP['0'];
+        const t = 4.2, hh = h / 2, g = 2.2;
+        const rects = [
+          [x + g, y, w - 2 * g, t],
+          [x + w - t, y + g, t, hh - 1.5 * g],
+          [x + w - t, y + hh + g * 0.5, t, hh - 1.5 * g],
+          [x + g, y + h - t, w - 2 * g, t],
+          [x, y + hh + g * 0.5, t, hh - 1.5 * g],
+          [x, y + g, t, hh - 1.5 * g],
+          [x + g, y + hh - t / 2, w - 2 * g, t]
+        ];
+        // هالة خفيفة بطبقة مزدوجة بدون shadowBlur
+        ctx.fillStyle = theme.uiGlow;
+        ctx.globalAlpha = 0.35;
+        for (let i = 0; i < 7; i++) {
+          if (!segs[i]) continue;
+          const [rx, ry, rw, rh] = rects[i];
+          ctx.fillRect(rx - 2, ry - 2, rw + 4, rh + 4);
+        }
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = theme.uiFill;
+        for (let i = 0; i < 7; i++) {
+          if (!segs[i]) continue;
+          const [rx, ry, rw, rh] = rects[i];
+          ctx.fillRect(rx, ry, rw, rh);
+        }
+      }
+
+      function drawSidewaysNumber(num, cx, cy, theme) {
+        const str = String(num);
+        const dw = 20, dh = 36, gap = 7;
+        const totalW = str.length * dw + (str.length - 1) * gap;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-Math.PI / 2);
+        for (let i = 0; i < str.length; i++) {
+          drawSevenSegDigit(str[i], -totalW / 2 + i * (dw + gap), -dh / 2, dw, dh, theme);
+        }
+        ctx.restore();
+      }
+
+      function drawCourtFast() {
+        const theme = getTheme();
+        // رسم كامل الملعب والجدران بضغطة واحدة من الكاش!
+        ctx.drawImage(courtCache, 0, 0, W, H);
+
+        // وميض الهدف
+        if (goalFlash.alpha > 0) {
+          ctx.save();
+          ctx.globalAlpha = goalFlash.alpha * 0.34;
+          ctx.fillStyle = goalFlash.color;
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
+
+        // وميض الجدار فقط عند اصطدام القرص به
+        const l = PAD, r = W - PAD, t = PAD, b = H - PAD, midY = H / 2, cg = 10;
+        if (wallFlashes.tl > 0.02) {
+          drawFastNeonLine(ctx, l + cg, t, GOAL_L - 8, t, theme.tl, wallFlashes.tl);
+          drawFastNeonLine(ctx, l, t + cg, l, midY - 6, theme.tl, wallFlashes.tl);
+        }
+        if (wallFlashes.tr > 0.02) {
+          drawFastNeonLine(ctx, GOAL_R + 8, t, r - cg, t, theme.tr, wallFlashes.tr);
+          drawFastNeonLine(ctx, r, t + cg, r, midY - 6, theme.tr, wallFlashes.tr);
+        }
+        if (wallFlashes.bl > 0.02) {
+          drawFastNeonLine(ctx, l, midY + 6, l, b - cg, theme.bl, wallFlashes.bl);
+          drawFastNeonLine(ctx, l + cg, b, GOAL_L - 8, b, theme.bl, wallFlashes.bl);
+        }
+        if (wallFlashes.br > 0.02) {
+          drawFastNeonLine(ctx, r, midY + 6, r, b - cg, theme.br, wallFlashes.br);
+          drawFastNeonLine(ctx, GOAL_R + 8, b, r - cg, b, theme.br, wallFlashes.br);
+        }
+
+        // دروع المرمى
+        if (topMallet.shieldTimer > 0) drawFastNeonLine(ctx, GOAL_L + 4, t, GOAL_R - 4, t, '#38bdf8', 0.5);
+        if (botMallet.shieldTimer > 0) drawFastNeonLine(ctx, GOAL_L + 4, b, GOAL_R - 4, b, '#38bdf8', 0.5);
+
+        // الأرقام فقط (زر الإيقاف مخبوز بالفعل في الكاش!)
+        drawSidewaysNumber(scoreTop, PAUSE_X, PAUSE_Y - 72, theme);
+        drawSidewaysNumber(scoreBot, PAUSE_X, PAUSE_Y + 72, theme);
+      }
+
+      function drawStarPath(rOuter, rInner, pts = 5) {
+        ctx.beginPath();
+        for (let i = 0; i < pts * 2; i++) {
+          const rad = i % 2 === 0 ? rOuter : rInner;
+          const a = (i * Math.PI) / pts - Math.PI / 2;
+          if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+      }
+
+      function drawHexPath(radius) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i * Math.PI) / 3 - Math.PI / 6;
+          if (i === 0) ctx.moveTo(Math.cos(a) * radius, Math.sin(a) * radius);
+          else ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
+        }
+        ctx.closePath();
+      }
+
+      function drawMallet(m, color, shapeId) {
+        const displayColor = m.freezeTimer > 0 ? '#38bdf8' : color;
+        ctx.save();
+        ctx.translate(m.x, m.y);
+
+        // هالة نيون سريعة من الكاش (بدون shadowBlur!)
+        const glowR = m.r * 1.75;
+        const glowImg = getGlowSprite(displayColor, glowR);
+        ctx.drawImage(glowImg, -glowR, -glowR, glowR * 2, glowR * 2);
+
+        if (m.freezeTimer > 0) {
+          ctx.strokeStyle = 'rgba(103, 232, 249, 0.8)';
+          ctx.setLineDash([5, 5]);
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.arc(0, 0, m.r + 7, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // الجسم الدائري الأبيض وحلقته الملونة
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, 0, m.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = displayColor;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // القلب حسب الشكل
+        ctx.fillStyle = displayColor;
+        if (shapeId === 'turbo') {
+          ctx.beginPath(); ctx.arc(0, 0, m.r * 0.56, 0, Math.PI * 2); ctx.fill();
+          ctx.rotate(timeAcc * 4.5);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3.2;
+          for (let i = 0; i < 4; i++) {
+            const a = (i * Math.PI) / 2;
+            ctx.beginPath(); ctx.arc(0, 0, m.r * 0.36, a, a + 0.75); ctx.stroke();
+          }
+        } else if (shapeId === 'star') {
+          ctx.beginPath(); ctx.arc(0, 0, m.r * 0.62, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          drawStarPath(m.r * 0.48, m.r * 0.21, 5);
+          ctx.fill();
+        } else if (shapeId === 'hex') {
+          drawHexPath(m.r * 0.66);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.4;
+          drawHexPath(m.r * 0.38);
+          ctx.stroke();
+        } else if (shapeId === 'target') {
+          ctx.beginPath(); ctx.arc(0, 0, m.r * 0.58, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.6;
+          ctx.beginPath(); ctx.arc(0, 0, m.r * 0.32, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-m.r * 0.52, 0); ctx.lineTo(-m.r * 0.16, 0);
+          ctx.moveTo(m.r * 0.16, 0); ctx.lineTo(m.r * 0.52, 0);
+          ctx.moveTo(0, -m.r * 0.52); ctx.lineTo(0, -m.r * 0.16);
+          ctx.moveTo(0, m.r * 0.16); ctx.lineTo(0, m.r * 0.52);
+          ctx.stroke();
+        } else {
+          ctx.beginPath(); ctx.arc(0, 0, m.r * 0.52, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawPowerupOrb() {
+        if (!activeOrb) return;
+        const pulse = 1 + Math.sin(timeAcc * 7) * 0.1;
+        ctx.save();
+        ctx.translate(activeOrb.x, activeOrb.y);
+        ctx.scale(pulse, pulse);
+
+        const gImg = getGlowSprite(activeOrb.color, 38);
+        ctx.drawImage(gImg, -38, -38, 76, 76);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.78)';
+        ctx.strokeStyle = activeOrb.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, activeOrb.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        ctx.font = '20px system-ui, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(activeOrb.icon, 0, 1);
+        ctx.restore();
+      }
+
+      function drawPuck() {
+        if (puck.y < -30 || puck.y > H + 30) return;
+        const theme = getTheme();
+        const glowColor = puck.fireTimer > 0 ? '#ff5722' : theme.puckGlow;
+
+        if (state === 'playing' && Math.hypot(puck.vx, puck.vy) < 8) {
+          const pulseR = puck.r + 8 + ((timeAcc * 28) % 18);
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, 1 - (pulseR - puck.r - 8) / 18) * 0.55;
+          ctx.strokeStyle = glowColor;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath(); ctx.arc(puck.x, puck.y, pulseR, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+
+        for (let i = 0; i < puck.trail.length; i++) {
+          const tr = puck.trail[i];
+          const ratio = (i + 1) / puck.trail.length;
+          ctx.globalAlpha = tr.alpha * ratio * 0.42;
+          ctx.fillStyle = glowColor;
+          ctx.beginPath(); ctx.arc(tr.x, tr.y, puck.r * (0.45 + ratio * 0.5), 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        ctx.save();
+        ctx.translate(puck.x, puck.y);
+
+        const glowR = puck.r * 2.4;
+        const gImg = getGlowSprite(glowColor, glowR);
+        ctx.drawImage(gImg, -glowR, -glowR, glowR * 2, glowR * 2);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(0, 0, puck.r, 0, Math.PI * 2); ctx.fill();
+
+        if (puckStyleId === 'plasma') {
+          ctx.strokeStyle = glowColor;
+          ctx.lineWidth = 2.6;
+          ctx.beginPath(); ctx.arc(0, 0, puck.r * 0.58, 0, Math.PI * 2); ctx.stroke();
+        } else if (puckStyleId === 'star') {
+          ctx.fillStyle = glowColor;
+          ctx.rotate(timeAcc * 4);
+          drawStarPath(puck.r * 0.72, puck.r * 0.3, 5);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function drawShockwavesAndParticles() {
+        for (const sw of shockwaves) {
+          ctx.globalAlpha = Math.max(0, sw.alpha * 0.4);
+          ctx.strokeStyle = sw.color;
+          ctx.lineWidth = 8;
+          ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+
+          ctx.globalAlpha = Math.max(0, sw.alpha);
+          ctx.lineWidth = 2.6;
+          ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+        }
+        for (const p of particles) {
+          const a = Math.max(0, p.life / p.maxLife);
+          ctx.globalAlpha = a * 0.38;
+          ctx.fillStyle = p.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 2.1, 0, Math.PI * 2); ctx.fill();
+
+          ctx.globalAlpha = a;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawBannersUnrotated() {
+        if (goalBanner.timer > 0) {
+          const s = 1 + (1.05 - goalBanner.timer) * 0.25;
+          ctx.save();
+          ctx.translate(W / 2, H / 2);
+          ctx.scale(s, s);
+          ctx.globalAlpha = Math.min(1, goalBanner.timer * 2.2);
+          ctx.font = '900 58px system-ui, sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.lineWidth = 8;
+          ctx.strokeStyle = goalBanner.color;
+          ctx.strokeText(goalBanner.text, 0, 0);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(goalBanner.text, 0, 0);
+          ctx.restore();
+        }
+        if (callout.timer > 0) {
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, callout.timer * 1.8);
+          ctx.font = '900 18px system-ui, sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#000000';
+          ctx.strokeText(callout.text, W / 2, callout.y);
+          ctx.fillStyle = callout.color;
+          ctx.fillText(callout.text, W / 2, callout.y);
+          ctx.restore();
+        }
+      }
+
+      function render() {
+        const theme = getTheme();
+        ctx.save();
+        if (shakeTime > 0) {
+          const mag = shakeTime * 18;
+          ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+        }
+
+        if (isFlippedView()) {
+          ctx.translate(W, H);
+          ctx.rotate(Math.PI);
+        }
+
+        drawCourtFast();
+        drawPowerupOrb();
+        drawShockwavesAndParticles();
+        drawPuck();
+        drawMallet(topMallet, theme.topMallet, topShapeId);
+        drawMallet(botMallet, theme.botMallet, botShapeId);
+
+        ctx.restore();
+        drawBannersUnrotated();
+      }
+
+      // ===== الحلقة الرئيسية =====
+      let lastTime = performance.now();
+      function loop(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.04);
+        lastTime = now;
+
+        // حساب FPS مرة واحدة كل ثانية عند اللعب أونلاين
+        if (isNetMode() && (state === 'playing' || state === 'goalPause')) {
+          fpsFrames++;
+          fpsTimer += dt;
+          if (fpsTimer >= 1.0) {
+            fpsValEl.textContent = Math.round(fpsFrames / fpsTimer);
+            fpsFrames = 0; fpsTimer = 0;
+          }
+        }
+
+        if (state === 'playing' || state === 'goalPause') {
+          if (gameMode === 'cloud') updateCloudClient(dt);
+          else if (gameMode === 'online' && !isHost) updateGuest(dt);
+          else updateSimulation(dt);
+        } else {
+          timeAcc += dt;
+        }
+        render();
+        requestAnimationFrame(loop);
+      }
+
+      // ===== اتصال الأونلاين / الواي فاي عبر PeerJS =====
+      const ROOM_PREFIX = 'gh-pro-v22-mkk912-';
+      const netStatusEl = document.getElementById('netStatus');
+      const roomCodeShow = document.getElementById('roomCodeShow');
+      const hostCodeInput = document.getElementById('hostCodeInput');
+      const joinCodeInput = document.getElementById('joinCodeInput');
+
+      function rand2() { return String(Math.floor(10 + Math.random() * 90)); }
+      hostCodeInput.value = rand2();
+
+      function setNetStatus(msg, cls = '') {
+        netStatusEl.textContent = msg;
+        netStatusEl.className = 'status-msg ' + cls;
+      }
+
+      function wireConn(conn, hostFlag) {
+        netConn = conn;
+        isHost = hostFlag;
+        conn.on('open', () => {
+          if (connectTimeout) { clearTimeout(connectTimeout); connectTimeout = null; }
+          setNetStatus('تم الاتصال بنجاح! جاري بدء المباراة...', 'ok');
+          if (isHost) setTimeout(() => startGame('online'), 250);
+        });
+        conn.on('data', (d) => handleNetData(d));
+        conn.on('close', () => {
+          if (state !== 'menu') {
+            alert('انقطع الاتصال باللاعب الآخر.');
+            goMainMenu();
+          }
+        });
+        conn.on('error', () => setNetStatus('حدث خطأ في الاتصال، حاول مجدداً.', 'err'));
+      }
+
+      function hostRoom(key, label) {
+        ensureAudio();
+        if (typeof window.Peer === 'undefined') {
+          setNetStatus('تأكد من وجود إنترنت لبدء الربط بين الجوالين.', 'err');
+          return;
+        }
+        closeNetwork();
+        roomCodeShow.classList.add('hidden');
+        setNetStatus('جاري تشغيل السيرفر...');
+        netPeer = new window.Peer(ROOM_PREFIX + key, {
+          config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
+        });
+        netPeer.on('open', () => {
+          roomCodeShow.textContent = label;
+          roomCodeShow.classList.remove('hidden');
+          setNetStatus('السيرفر جاهز! اضغط انضمام في الجوال الثاني الآن.', 'ok');
+        });
+        netPeer.on('connection', (conn) => wireConn(conn, true));
+        netPeer.on('error', (err) => {
+          setNetStatus(err && err.type === 'unavailable-id'
+            ? 'هذا الكود مستخدم حالياً! اختر رقمين آخرين.'
+            : 'تعذر تشغيل السيرفر — تأكد من الشبكة.', 'err');
+        });
+      }
+
+      function joinRoom(key) {
+        ensureAudio();
+        if (typeof window.Peer === 'undefined') {
+          setNetStatus('تأكد من وجود إنترنت للاتصال بالسيرفر.', 'err');
+          return;
+        }
+        closeNetwork();
+        setNetStatus('جاري البحث والاتصال بالسيرفر...');
+        connectTimeout = setTimeout(() => {
+          if (!netConn || !netConn.open) {
+            setNetStatus('انتهت المهلة — تأكد أن السيرفر يعمل بنفس الكود.', 'err');
+            closeNetwork();
+          }
+        }, 9000);
+
+        netPeer = new window.Peer({
+          config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] }
+        });
+        netPeer.on('open', () => {
+          const conn = netPeer.connect(ROOM_PREFIX + key, { reliable: false, serialization: 'json' });
+          wireConn(conn, false);
+        });
+        netPeer.on('error', (err) => {
+          if (connectTimeout) { clearTimeout(connectTimeout); connectTimeout = null; }
+          setNetStatus(err && err.type === 'peer-unavailable'
+            ? 'السيرفر غير مشغّل! شغّله في الجوال الأول أولاً.'
+            : 'تعذر الاتصال، تأكد من الكود والشبكة.', 'err');
+        });
+      }
+
+      document.getElementById('hostAutoBtn').addEventListener('click', () => hostRoom('auto', 'بدون كود ⚡ (مفتوح)'));
+      document.getElementById('host2DigitBtn').addEventListener('click', () => {
+        let c = hostCodeInput.value.trim().replace(/\D/g, '');
+        if (!c) c = rand2();
+        if (c.length === 1) c = '0' + c;
+        hostCodeInput.value = c;
+        hostRoom('n' + c, 'الكود: ' + c);
+      });
+      document.getElementById('joinAutoBtn').addEventListener('click', () => joinRoom('auto'));
+      document.getElementById('join2DigitBtn').addEventListener('click', () => {
+        let c = joinCodeInput.value.trim().replace(/\D/g, '');
+        if (!c) { setNetStatus('أدخل الكود المكون من رقمين.', 'err'); return; }
+        if (c.length === 1) c = '0' + c;
+        joinRoom('n' + c);
+      });
+      document.getElementById('netLeaveBtn').addEventListener('click', goMainMenu);
+      window.addEventListener('beforeunload', () => closeNetwork());
+
+      // ===== ربط السيرفر السحابي (WebSocket) =====
+      const cloudUrlInput = document.getElementById('cloudUrlInput');
+      const cloudCodeInput = document.getElementById('cloudCodeInput');
+      const cloudRoomShow = document.getElementById('cloudRoomShow');
+      const cloudStatusEl = document.getElementById('cloudStatus');
+
+      function setCloudStatus(msg, cls = '') {
+        cloudStatusEl.textContent = msg;
+        cloudStatusEl.className = 'status-msg ' + cls;
+      }
+
+      function initCloudUrl() {
+        const saved = localStorage.getItem('gh3_cloud_url') || '';
+        if (saved) {
+          cloudUrlInput.value = saved;
+        } else if (location.protocol.startsWith('http') && !location.hostname.includes('netlify') && location.hostname !== '') {
+          cloudUrlInput.value = location.origin;
+        }
+      }
+      initCloudUrl();
+
+      function normalizeServerUrls(raw) {
+        let s = (raw || '').trim().replace(/\/+$/, '');
+        if (!s) return null;
+        if (!/^https?:\/\//i.test(s) && !/^wss?:\/\//i.test(s)) {
+          s = 'https://' + s;
+        }
+        const httpUrl = s.replace(/^wss:/i, 'https:').replace(/^ws:/i, 'http:');
+        const wsUrl = s.replace(/^https:/i, 'wss:').replace(/^http:/i, 'ws:');
+        return { httpUrl, wsUrl };
+      }
+
+      document.getElementById('cloudPingBtn').addEventListener('click', async () => {
+        ensureAudio();
+        const urls = normalizeServerUrls(cloudUrlInput.value);
+        if (!urls) { setCloudStatus('أدخل رابط السيرفر أولاً (مثل https://your-app.onrender.com).', 'err'); return; }
+        localStorage.setItem('gh3_cloud_url', urls.httpUrl);
+        setCloudStatus('جاري فحص السيرفر... (أول تشغيل على Render قد يستغرق 25 ثانية)');
+        const t0 = Date.now();
+        try {
+          const resp = await fetch(urls.httpUrl + '/health', { cache: 'no-store' });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          const ms = Date.now() - t0;
+          setCloudStatus(`✅ السيرفر شغّال وجاهز! (${ms}ms • غرف نشطة: ${data.rooms || 0})`, 'ok');
+          SFX.wall(1.2);
+        } catch (err) {
+          setCloudStatus('تعذر الوصول للسيرفر — تأكد من الرابط أو أعد المحاولة بعد لحظات.', 'err');
+        }
+      });
+
+      function connectCloudRoom(roomKey) {
+        ensureAudio();
+        const urls = normalizeServerUrls(cloudUrlInput.value);
+        if (!urls) { setCloudStatus('أدخل رابط السيرفر أولاً (مثل https://your-app.onrender.com).', 'err'); return; }
+        localStorage.setItem('gh3_cloud_url', urls.httpUrl);
+        closeNetwork();
+        cloudRoomShow.classList.add('hidden');
+        setCloudStatus('جاري الاتصال بالسيرفر السحابي...');
+
+        cloudTimeout = setTimeout(() => {
+          if (!cloudWS || cloudWS.readyState !== 1) {
+            setCloudStatus('انتهت مهلة الاتصال — اضغط «فحص وإيقاظ السيرفر» أولاً ثم أعد المحاولة.', 'err');
+            closeNetwork();
+          }
+        }, 15000);
+
+        try {
+          cloudWS = new WebSocket(urls.wsUrl);
+        } catch (err) {
+          setCloudStatus('رابط السيرفر غير صحيح.', 'err');
+          return;
+        }
+
+        cloudWS.onopen = () => {
+          if (cloudTimeout) { clearTimeout(cloudTimeout); cloudTimeout = null; }
+          lastInSeq = 0; lastSentInX = -999; lastSentInY = -999;
+          sendCloud({
+            t: 'join', room: roomKey, win: targetScore,
+            th: currentThemeId, sb: botShapeId, st: topShapeId, pk: puckStyleId, pu: powerUpsEnabled
+          });
+        };
+        cloudWS.onmessage = (ev) => {
+          try { handleCloudMessage(JSON.parse(ev.data)); } catch (e) {}
+        };
+        cloudWS.onerror = () => {
+          setCloudStatus('فشل الاتصال بالسيرفر السحابي — تأكد من الرابط ومن إيقاظ السيرفر.', 'err');
+        };
+        cloudWS.onclose = () => {
+          if (gameMode === 'cloud' && state !== 'menu') {
+            alert('انقطع الاتصال بالسيرفر السحابي.');
+            goMainMenu();
+          }
+        };
+      }
+
+      document.getElementById('cloudAutoBtn').addEventListener('click', () => connectCloudRoom('auto'));
+      document.getElementById('cloud2DigitBtn').addEventListener('click', () => {
+        let c = cloudCodeInput.value.trim().replace(/\D/g, '');
+        if (!c) { setCloudStatus('أدخل كود من رقمين (مثلاً 25).', 'err'); return; }
+        if (c.length === 1) c = '0' + c;
+        cloudCodeInput.value = c;
+        connectCloudRoom('n' + c);
+      });
+
+      document.getElementById('btnCloud').addEventListener('click', () => {
+        ensureAudio();
+        setCloudStatus('');
+        cloudRoomShow.classList.add('hidden');
+        showOverlay('cloud');
+      });
+
+      // ===== ربط الأزرار والقوائم =====
+      document.getElementById('btnSolo').addEventListener('click', () => { ensureAudio(); showOverlay('solo'); });
+      document.getElementById('btnLocal2p').addEventListener('click', () => { isHost = true; startGame('local2p'); });
+      document.getElementById('btnCustomize').addEventListener('click', () => { ensureAudio(); renderCustomizeUI(); showOverlay('custom'); });
+      document.getElementById('btnOnline').addEventListener('click', () => {
+        ensureAudio();
+        setNetStatus('');
+        roomCodeShow.classList.add('hidden');
+        hostCodeInput.value = rand2();
+        showOverlay('online');
+      });
+
+      document.getElementById('powerupToggleRow').addEventListener('click', () => {
+        ensureAudio();
+        powerUpsEnabled = !powerUpsEnabled;
+        localStorage.setItem('gh2_pu', powerUpsEnabled ? '1' : '0');
+        syncPowerupUI();
+        SFX.wall(powerUpsEnabled ? 1.2 : 0.8);
+      });
+
+      document.getElementById('perfToggleRow').addEventListener('click', () => {
+        ensureAudio();
+        perfMode = perfMode === 'fast' ? 'ultra' : 'fast';
+        localStorage.setItem('gh2_perf', perfMode);
+        syncPerfUI();
+        applyCanvasResolution();
+        SFX.wall(1.1);
+      });
+
+      document.querySelectorAll('#puckShapeRow .seg').forEach(b => {
+        b.addEventListener('click', () => {
+          puckStyleId = b.dataset.puck;
+          localStorage.setItem('gh2_puck', puckStyleId);
+          ensureAudio(); SFX.wall(1.0);
+          renderCustomizeUI();
+        });
+      });
+
+      document.querySelectorAll('.back-main').forEach(b => b.addEventListener('click', () => {
+        if (state === 'menu') showOverlay('main');
+        else goMainMenu();
+      }));
+
+      document.querySelectorAll('#winTargetRow .seg').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('#winTargetRow .seg').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          targetScore = parseInt(b.dataset.win, 10);
+        });
+      });
+
+      document.querySelectorAll('#diffRow .seg').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('#diffRow .seg').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          aiDiff = b.dataset.diff;
+        });
+      });
+
+      const tabHost = document.getElementById('tabHost');
+      const tabJoin = document.getElementById('tabJoin');
+      const hostPanel = document.getElementById('hostPanel');
+      const joinPanel = document.getElementById('joinPanel');
+      tabHost.addEventListener('click', () => {
+        tabHost.classList.add('active'); tabJoin.classList.remove('active');
+        hostPanel.classList.remove('hidden'); joinPanel.classList.add('hidden');
+        setNetStatus('');
+      });
+      tabJoin.addEventListener('click', () => {
+        tabJoin.classList.add('active'); tabHost.classList.remove('active');
+        joinPanel.classList.remove('hidden'); hostPanel.classList.add('hidden');
+        setNetStatus('');
+      });
+
+      document.getElementById('startSoloBtn').addEventListener('click', () => { isHost = true; startGame('solo'); });
+      document.getElementById('resumeBtn').addEventListener('click', togglePause);
+      restartMidBtn.addEventListener('click', () => {
+        if (gameMode === 'cloud') { sendCloud({ t: 'rematch' }); return; }
+        if (gameMode === 'online' && !isHost) return;
+        startGame(gameMode);
+      });
+      playAgainBtn.addEventListener('click', () => {
+        if (gameMode === 'cloud') { sendCloud({ t: 'rematch' }); return; }
+        if (gameMode === 'online' && !isHost) return;
+        startGame(gameMode);
+      });
+      document.getElementById('quitBtn').addEventListener('click', goMainMenu);
+      document.getElementById('winMenuBtn').addEventListener('click', goMainMenu);
+
+      soundToggleBtn.addEventListener('click', () => {
+        ensureAudio();
+        soundOn = !soundOn;
+        soundToggleBtn.textContent = soundOn ? '🔊 الصوت: يعمل' : '🔇 الصوت: صامت';
+      });
+      vibToggleBtn.addEventListener('click', () => {
+        vibOn = !vibOn;
+        vibToggleBtn.textContent = vibOn ? '📳 الاهتزاز: يعمل' : '📴 الاهتزاز: مغلق';
+      });
+
+      syncPowerupUI();
+      syncPerfUI();
+      applyCanvasResolution();
+      renderCustomizeUI();
+      resetPositions('center');
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
